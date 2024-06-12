@@ -140,6 +140,6 @@ Verify Location Profile Created
     Click Element    ${SAVE_BUTTON}
     Wait Until Page Contains Element    //td[contains(text(), "${PARTNER_NAME}")]    10s
     Element Should Contain    //td[contains(text(), "${PARTNER_NAME}")]    ${PARTNER_NAME}
-    Element Should Contain    [aria-label="${CITY}"]    ${CITY}
-    Element Should Contain    //a[contains(.,"${ZIP_CODE}")]    ${ZIP_CODE}
+    Element Should Contain    //td[text()='${CITY}']    ${CITY}
+    Element Should Contain    //td[text()='${ZIP_CODE}']    ${ZIP_CODE}
     Element Should Contain    //a[contains(.,"${STREET_NAME}")]    ${STREET_NAME}
