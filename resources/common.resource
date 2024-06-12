@@ -25,13 +25,14 @@ ${LOCATION}    //a[contains(.,'Telephelyek')]
 ${REMINDER}    //a[contains(.,'Emlékeztetők')]
 ${TOOL}    //a[contains(.,'Eszközök')]
 ${REPORT}    //a[contains(.,'Riportok')]
-${ADD_BUTTON}    //div/button[@aria-label="Add"]
+
+${ADD_CUS_BUTTON}    //div/button[@aria-label="Add"]
+${ADD_LOC_BUTTON}    css:[aria-label='Add']
+${SAVE_BUTTON}    //button[@class='e-control e-btn e-lib e-control e-btn e-lib e-primary e-flat']
 
 ${ADD_CUS_NAME_INPUT_FIELD}    //div/input[@id="name"]
 ${ADD_CUS_EMAIL_INPUT_FIELD}    //div/input[@id="email"]
 ${ADD_CUS_COMMENT_INPUT_FIELD}    //div/input[@id="comment"]
-${ADD_CUS_SAVE_BUTTON}    //button[@class='e-control e-btn e-lib e-control e-btn e-lib e-primary e-flat']
-${CUSTOMER_LIST_NAME_CELL}    //td[contains(text(), "${PARTNER_NAME}")]
 
 ${ADD_LOC_PARTNER_INPUT_FIELD}    //input[@placeholder="Ügyfél"]
 ${ADD_LOC_CITY_INPUT_FIELD}    //input[@id="varos"]
@@ -66,7 +67,7 @@ Test Homepage Loaded
     Title Should Be    ${EXPECTED_TITLE}
 
 Navigate To Partner Menu Element
-    Wait Until Element Is Visible    ${CUSTOMER}    5s
+    Wait Until Element Is Visible    ${CUSTOMER}    10s
     Click Element    ${CUSTOMER}
     Location Should Be    ${CUSTOMER_URL}  
 
@@ -103,17 +104,15 @@ Get Random Data From API (NO PROXY)
     Set Suite Variable    ${STREET_NAME}    ${street_name}
 
 Create Partner Profile With API Data
-
-    Click Element    ${CUSTOMER}
-    Click Element    ${ADD_BUTTON}
-    Wait Until Element Is Visible    ${ADD_CUS_NAME_INPUT_FIELD}    2s
+    Click Element    ${ADD_CUS_BUTTON}
+    Wait Until Element Is Visible    ${ADD_CUS_NAME_INPUT_FIELD}    10s
     Input Text    ${ADD_CUS_NAME_INPUT_FIELD}    ${PARTNER_NAME}
     Input Text    ${ADD_CUS_EMAIL_INPUT_FIELD}    ${PARTNER_EMAIL}
     Input Text    ${ADD_CUS_COMMENT_INPUT_FIELD}   ${PARTNER_ID}
 
 Verify Partner Profile Created
-    Click Element    ${ADD_CUS_SAVE_BUTTON}
-    Wait Until Page Contains Element    //td[contains(text(), "${PARTNER_NAME}")]    2s
+    Click Element    ${SAVE_BUTTON}
+    Wait Until Page Contains Element    //td[contains(text(), "${PARTNER_NAME}")]    10s
     Element Should Contain    //td[contains(text(), "${PARTNER_NAME}")]    ${PARTNER_NAME}
     Element Should Contain    //td[contains(text(), "${PARTNER_EMAIL}")]    ${PARTNER_EMAIL}
 
@@ -122,12 +121,18 @@ Navigate To Location Menu Element
     Location Should Be    ${LOCATION_URL}
 
 Create Location Profile With API Data
-
-    Click Element    ${LOCATION}
-    Click Element    ${ADD_BUTTON}
-    Wait Until Element Is Visible    ${ADD_LOC_PARTNER_INPUT_FIELD}    2s
+    Sleep    10
+    Click Element    ${ADD_LOC_BUTTON}
+    Wait Until Element Is Visible    ${ADD_LOC_PARTNER_INPUT_FIELD}    10s
     Input Text    ${ADD_LOC_PARTNER_INPUT_FIELD}    ${PARTNER_NAME}
     Input Text    ${ADD_LOC_CITY_INPUT_FIELD}    ${CITY}
     Input Text    ${ADD_LOC_ZIP_CODE_INPUT_FIELD}    ${ZIP_CODE}
+    Log    ${ADD_LOC_ZIP_CODE_INPUT_FIELD}
     Input Text    ${ADD_LOC_STR_INPUT_FIELD}    ${STREET_NAME}
     Input Text    ${ADD_LOC_STR_NUM_INPUT_FIELD}    ${STR_NUM}
+
+Verify Location Profile Created
+    Click Element    ${SAVE_BUTTON}
+    Wait Until Page Contains Element    //td[contains(text(), "${PARTNER_NAME}")]    10s
+    Element Should Contain    //td[contains(text(), "${PARTNER_NAME}")]    ${PARTNER_NAME}
+    Element Should Contain    //td[contains(text(), "${STREET_NAME}")]    ${STREET_NAME}

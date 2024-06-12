@@ -18,3 +18,5 @@ BWP Client Function Test
     Navigate To Location Menu Element
 
     Create Location Profile With API Data
+
+    Verify Location Profile Created
