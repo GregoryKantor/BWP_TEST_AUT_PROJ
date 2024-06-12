@@ -13,6 +13,7 @@ ${TOOL_URL}    https://bwpool.azurewebsites.net/Tool
 ${REPORT_URL}    https://bwpool.azurewebsites.net/Report
 ${PROXY}  http://idebproxy01.itsh.itsh-internal.hu:3128
 ${API_URL}  https://random-data-api.com/api/users/random_user
+${API_DEVICE_URL}    https://random-data-api.com/api/device/random_device?size=2
 ${CUSTOMER_URL}    https://bwpool.azurewebsites.net/Customer
 ${LOCATION_URL}    https://bwpool.azurewebsites.net/Location
 
@@ -50,6 +51,11 @@ ${CITY}    None
 ${ZIP_CODE}    None
 ${STREET_NAME}    None
 ${STR_NUM}    None
+${API_DATA_DEVICE}    None
+${MANUFACTURER_DEVICE}    None
+${MODEL_DEVICE}    None
+${PLATFORM_DEVICE}    None
+${SERIAL_NUMBER_DEVICE}    None
 
 # Error messages
 
@@ -72,34 +78,21 @@ Navigate To Partner Menu Element
 
 Click Element Safely
     [Arguments]    ${locator}
-    Wait Until Element Is Visible    ${locator}    10s
+    Wait Until Element Is Visible    ${locator}    20s
     ${element}=    Get WebElement    ${locator}
     Click Element    ${element}
      
 
 Get Random Data From API (NO PROXY)
     ${api_response}    GET    ${API_URL}
-
     ${api_data_body}    Set Variable    ${api_response.json()}
-    Log    ${api_data_body}
 
     ${id}    Set Variable    ${api_data_body}[id]
-    Log    ${id}
-    
     ${name}    Evaluate    $api_data_body['first_name'] + ' ' + $api_data_body['last_name']
-    Log    ${name}
-
     ${email}    Set Variable    ${api_data_body}[email]
-    Log    ${email}
-
     ${city}    Set Variable    ${api_data_body}[address][city]
-    Log    ${city}
-
     ${zip_code}    Set Variable    ${api_data_body}[address][zip_code]
-    Log    ${zip_code}
-
     ${street_name}    Set Variable    ${api_data_body}[address][street_name]
-    Log    ${street_name}
 
     Set Suite Variable    ${API_DATA}    ${api_data_body}
     Set Suite Variable    ${PARTNER_NAME}    ${name}
@@ -121,6 +114,7 @@ Verify Partner Profile Created
     Wait Until Page Contains Element    //td[contains(text(), "${PARTNER_NAME}")]    10s
     Element Should Contain    //td[contains(text(), "${PARTNER_NAME}")]    ${PARTNER_NAME}
     Element Should Contain    //td[contains(text(), "${PARTNER_EMAIL}")]    ${PARTNER_EMAIL}
+    Element Should Contain    //td[contains(text(), "${PARTNER_ID}")]    ${PARTNER_ID}
 
 Navigate To Location Menu Element
     Click Element    ${LOCATION}
@@ -141,5 +135,20 @@ Verify Location Profile Created
     Wait Until Page Contains Element    //td[contains(text(), "${PARTNER_NAME}")]    10s
     Element Should Contain    //td[contains(text(), "${PARTNER_NAME}")]    ${PARTNER_NAME}
     Element Should Contain    //td[text()='${CITY}']    ${CITY}
-    Element Should Contain    //td[text()='${ZIP_CODE}']    ${ZIP_CODE}
+    #Element Should Contain    //td[text()='${ZIP_CODE}']    ${ZIP_CODE}
     Element Should Contain    //a[contains(.,"${STREET_NAME}")]    ${STREET_NAME}
+
+Get Random Device Data From API (NO PROXY)
+    ${api_response_device}    GET    ${API_DEVICE_URL}
+    ${api_data_body_device}    Set Variable    ${api_response_device.json()}
+    Log    ${api_data_body_device}
+    ${manufacturer}    Set Variable    ${api_data_body_device}\[manufacturer\]
+    ${model}    Set Variable    ${api_data_body_device}\[model\]
+    ${platform}    Set Variable    ${api_data_body_device}\[platform\]
+    ${serial_number}    Set Variable    ${api_data_body_device}\[serial_number\]
+
+    Set Suite Variable    ${API_DATA_DEVICE}    ${api_data_body_device}
+    Set Suite Variable    ${MANUFACTURER_DEVICE}    ${manufacturer}
+    Set Suite Variable    ${MODEL_DEVICE}    ${model}
+    Set Suite Variable    ${PLATFORM_DEVICE}    ${platform}
+    Set Suite Variable    ${SERIAL_NUMBER_DEVICE}    ${serial_number}

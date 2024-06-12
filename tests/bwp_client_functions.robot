@@ -20,3 +20,5 @@ BWP Client Function Test
     Create Location Profile With API Data
 
     Verify Location Profile Created
+
+    Get Random Device Data From API (NO PROXY)
