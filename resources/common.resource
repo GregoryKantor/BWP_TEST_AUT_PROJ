@@ -28,6 +28,7 @@ ${ADD_CUS_NAME_INPUT_FIELD}    //div/input[@id="name"]
 ${ADD_CUS_EMAIL_INPUT_FIELD}    //div/input[@id="email"]
 ${ADD_CUS_COMMENT_INPUT_FIELD}    //div/input[@id="comment"]
 ${ADD_CUS_SAVE_BUTTON}    //button[@class='e-control e-btn e-lib e-control e-btn e-lib e-primary e-flat']
+${CUSTOMER_LIST_NAME_CELL}    //td[contains(text(), "${PARTNER_NAME}")]   
 
 # Other Variables
 ${BROWSER}    Chrome
@@ -52,6 +53,7 @@ Test Homepage Loaded
     Title Should Be    ${EXPECTED_TITLE}
 
 Navigate To Partner Menu Element
+    Wait Until Element Is Visible    ${CUSTOMER}    5s
     Click Element    ${CUSTOMER}
 
 Get Random Data From API (NO PROXY)
@@ -82,4 +84,9 @@ Create Partner Profile With API Data
     Input Text    ${ADD_CUS_NAME_INPUT_FIELD}    ${PARTNER_NAME}
     Input Text    ${ADD_CUS_EMAIL_INPUT_FIELD}    ${PARTNER_EMAIL}
     Input Text    ${ADD_CUS_COMMENT_INPUT_FIELD}   ${PARTNER_ID}
+
+Verify Partner Profile Created
     Click Element    ${ADD_CUS_SAVE_BUTTON}
+    Wait Until Page Contains Element    //td[contains(text(), "${PARTNER_NAME}")]    2s
+    Element Should Contain    //td[contains(text(), "${PARTNER_NAME}")]    ${PARTNER_NAME}
+    Element Should Contain    //td[contains(text(), "${PARTNER_EMAIL}")]    ${PARTNER_EMAIL}

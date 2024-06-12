@@ -12,3 +12,5 @@ BWP Client Function Test
     Get Random Data From API (NO PROXY)
 
     Create Partner Profile With API Data
+
+    Verify Partner Profile Created
