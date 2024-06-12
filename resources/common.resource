@@ -13,6 +13,8 @@ ${TOOL_URL}    https://bwpool.azurewebsites.net/Tool
 ${REPORT_URL}    https://bwpool.azurewebsites.net/Report
 ${PROXY}  http://idebproxy01.itsh.itsh-internal.hu:3128
 ${API_URL}  https://random-data-api.com/api/users/random_user
+${CUSTOMER_URL}    https://bwpool.azurewebsites.net/Customer
+${LOCATION_URL}    https://bwpool.azurewebsites.net/Location
 
 # Locators
 ${HOME}    //a[.='BWP nyilvántartó']
@@ -23,12 +25,19 @@ ${LOCATION}    //a[contains(.,'Telephelyek')]
 ${REMINDER}    //a[contains(.,'Emlékeztetők')]
 ${TOOL}    //a[contains(.,'Eszközök')]
 ${REPORT}    //a[contains(.,'Riportok')]
-${ADD_CUS_BUTTON}    //div/button[@aria-label="Add"]
+${ADD_BUTTON}    //div/button[@aria-label="Add"]
+
 ${ADD_CUS_NAME_INPUT_FIELD}    //div/input[@id="name"]
 ${ADD_CUS_EMAIL_INPUT_FIELD}    //div/input[@id="email"]
 ${ADD_CUS_COMMENT_INPUT_FIELD}    //div/input[@id="comment"]
 ${ADD_CUS_SAVE_BUTTON}    //button[@class='e-control e-btn e-lib e-control e-btn e-lib e-primary e-flat']
-${CUSTOMER_LIST_NAME_CELL}    //td[contains(text(), "${PARTNER_NAME}")]   
+${CUSTOMER_LIST_NAME_CELL}    //td[contains(text(), "${PARTNER_NAME}")]
+
+${ADD_LOC_PARTNER_INPUT_FIELD}    //input[@placeholder="Ügyfél"]
+${ADD_LOC_CITY_INPUT_FIELD}    //input[@id="varos"]
+${ADD_LOC_ZIP_CODE_INPUT_FIELD}    //input[@id="zip"]
+${ADD_LOC_STR_INPUT_FIELD}    //input[@id="utca"]
+${ADD_LOC_STR_NUM_INPUT_FIELD}    //input[@id="szam"]
 
 # Other Variables
 ${BROWSER}    Chrome
@@ -37,6 +46,10 @@ ${API_DATA}    None
 ${PARTNER_NAME}    None
 ${PARTNER_EMAIL}    None
 ${PARTNER_ID}    None
+${CITY}    None
+${ZIP_CODE}    None
+${STREET_NAME}    None
+${STR_NUM}    None
 
 # Error messages
 
@@ -55,6 +68,7 @@ Test Homepage Loaded
 Navigate To Partner Menu Element
     Wait Until Element Is Visible    ${CUSTOMER}    5s
     Click Element    ${CUSTOMER}
+    Location Should Be    ${CUSTOMER_URL}  
 
 Get Random Data From API (NO PROXY)
     ${api_response}    GET    ${API_URL}
@@ -71,15 +85,27 @@ Get Random Data From API (NO PROXY)
     ${email}    Set Variable    ${api_data_body}[email]
     Log    ${email}
 
+    ${city}    Set Variable    ${api_data_body}[address][city]
+    Log    ${city}
+
+    ${zip_code}    Set Variable    ${api_data_body}[address][zip_code]
+    Log    ${zip_code}
+
+    ${street_name}    Set Variable    ${api_data_body}[address][street_name]
+    Log    ${street_name}
+
     Set Suite Variable    ${API_DATA}    ${api_data_body}
     Set Suite Variable    ${PARTNER_NAME}    ${name}
     Set Suite Variable    ${PARTNER_EMAIL}    ${email}
     Set Suite Variable    ${PARTNER_ID}    ${id}
+    Set Suite Variable    ${CITY}    ${city}
+    Set Suite Variable    ${ZIP_CODE}    ${zip_code}
+    Set Suite Variable    ${STREET_NAME}    ${street_name}
 
 Create Partner Profile With API Data
 
     Click Element    ${CUSTOMER}
-    Click Element    ${ADD_CUS_BUTTON}
+    Click Element    ${ADD_BUTTON}
     Wait Until Element Is Visible    ${ADD_CUS_NAME_INPUT_FIELD}    2s
     Input Text    ${ADD_CUS_NAME_INPUT_FIELD}    ${PARTNER_NAME}
     Input Text    ${ADD_CUS_EMAIL_INPUT_FIELD}    ${PARTNER_EMAIL}
@@ -90,3 +116,18 @@ Verify Partner Profile Created
     Wait Until Page Contains Element    //td[contains(text(), "${PARTNER_NAME}")]    2s
     Element Should Contain    //td[contains(text(), "${PARTNER_NAME}")]    ${PARTNER_NAME}
     Element Should Contain    //td[contains(text(), "${PARTNER_EMAIL}")]    ${PARTNER_EMAIL}
+
+Navigate To Location Menu Element
+    Click Element    ${LOCATION}
+    Location Should Be    ${LOCATION_URL}
+
+Create Location Profile With API Data
+
+    Click Element    ${LOCATION}
+    Click Element    ${ADD_BUTTON}
+    Wait Until Element Is Visible    ${ADD_LOC_PARTNER_INPUT_FIELD}    2s
+    Input Text    ${ADD_LOC_PARTNER_INPUT_FIELD}    ${PARTNER_NAME}
+    Input Text    ${ADD_LOC_CITY_INPUT_FIELD}    ${CITY}
+    Input Text    ${ADD_LOC_ZIP_CODE_INPUT_FIELD}    ${ZIP_CODE}
+    Input Text    ${ADD_LOC_STR_INPUT_FIELD}    ${STREET_NAME}
+    Input Text    ${ADD_LOC_STR_NUM_INPUT_FIELD}    ${STR_NUM}

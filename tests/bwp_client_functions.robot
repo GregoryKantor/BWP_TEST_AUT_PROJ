@@ -14,3 +14,7 @@ BWP Client Function Test
     Create Partner Profile With API Data
 
     Verify Partner Profile Created
+
+    Navigate To Location Menu Element
+
+    Create Location Profile With API Data
