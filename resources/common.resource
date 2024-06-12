@@ -32,9 +32,10 @@ ${ADD_CUS_SAVE_BUTTON}    //button[@class='e-control e-btn e-lib e-control e-btn
 # Other Variables
 ${BROWSER}    Chrome
 ${EXPECTED_TITLE}    BWP Index
-${name}   
-${id}    
-${email}    
+${API_DATA}    None
+${PARTNER_NAME}    None
+${PARTNER_EMAIL}    None
+${PARTNER_ID}    None
 
 # Error messages
 
@@ -46,3 +47,39 @@ Test Setup
 
 Test Teardown
     Close All Browsers
+    
+Test Homepage Loaded    
+    Title Should Be    ${EXPECTED_TITLE}
+
+Navigate To Partner Menu Element
+    Click Element    ${CUSTOMER}
+
+Get Random Data From API (NO PROXY)
+    ${api_response}    GET    ${API_URL}
+
+    ${api_data_body}    Set Variable    ${api_response.json()}
+    Log    ${api_data_body}
+
+    ${id}    Set Variable    ${api_data_body}[id]
+    Log    ${id}
+    
+    ${name}    Evaluate    $api_data_body['first_name'] + ' ' + $api_data_body['last_name']
+    Log    ${name}
+
+    ${email}    Set Variable    ${api_data_body}[email]
+    Log    ${email}
+
+    Set Suite Variable    ${API_DATA}    ${api_data_body}
+    Set Suite Variable    ${PARTNER_NAME}    ${name}
+    Set Suite Variable    ${PARTNER_EMAIL}    ${email}
+    Set Suite Variable    ${PARTNER_ID}    ${id}
+
+Create Partner Profile With API Data
+
+    Click Element    ${CUSTOMER}
+    Click Element    ${ADD_CUS_BUTTON}
+    Wait Until Element Is Visible    ${ADD_CUS_NAME_INPUT_FIELD}    2s
+    Input Text    ${ADD_CUS_NAME_INPUT_FIELD}    ${PARTNER_NAME}
+    Input Text    ${ADD_CUS_EMAIL_INPUT_FIELD}    ${PARTNER_EMAIL}
+    Input Text    ${ADD_CUS_COMMENT_INPUT_FIELD}   ${PARTNER_ID}
+    Click Element    ${ADD_CUS_SAVE_BUTTON}
