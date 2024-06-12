@@ -26,8 +26,7 @@ ${REMINDER}    //a[contains(.,'Emlékeztetők')]
 ${TOOL}    //a[contains(.,'Eszközök')]
 ${REPORT}    //a[contains(.,'Riportok')]
 
-${ADD_CUS_BUTTON}    //div/button[@aria-label="Add"]
-${ADD_LOC_BUTTON}    css:[aria-label='Add']
+${ADD_BUTTON}    //div/button[@aria-label="Add"]
 ${SAVE_BUTTON}    //button[@class='e-control e-btn e-lib e-control e-btn e-lib e-primary e-flat']
 
 ${ADD_CUS_NAME_INPUT_FIELD}    //div/input[@id="name"]
@@ -68,8 +67,15 @@ Test Homepage Loaded
 
 Navigate To Partner Menu Element
     Wait Until Element Is Visible    ${CUSTOMER}    10s
-    Click Element    ${CUSTOMER}
-    Location Should Be    ${CUSTOMER_URL}  
+    Click Element Safely    ${CUSTOMER}
+    Location Should Be    ${CUSTOMER_URL}
+
+Click Element Safely
+    [Arguments]    ${locator}
+    Wait Until Element Is Visible    ${locator}    10s
+    ${element}=    Get WebElement    ${locator}
+    Click Element    ${element}
+     
 
 Get Random Data From API (NO PROXY)
     ${api_response}    GET    ${API_URL}
@@ -104,7 +110,7 @@ Get Random Data From API (NO PROXY)
     Set Suite Variable    ${STREET_NAME}    ${street_name}
 
 Create Partner Profile With API Data
-    Click Element    ${ADD_CUS_BUTTON}
+    Click Element    ${ADD_BUTTON}
     Wait Until Element Is Visible    ${ADD_CUS_NAME_INPUT_FIELD}    10s
     Input Text    ${ADD_CUS_NAME_INPUT_FIELD}    ${PARTNER_NAME}
     Input Text    ${ADD_CUS_EMAIL_INPUT_FIELD}    ${PARTNER_EMAIL}
@@ -122,12 +128,11 @@ Navigate To Location Menu Element
 
 Create Location Profile With API Data
     Sleep    10
-    Click Element    ${ADD_LOC_BUTTON}
+    Click Element    ${ADD_BUTTON}
     Wait Until Element Is Visible    ${ADD_LOC_PARTNER_INPUT_FIELD}    10s
     Input Text    ${ADD_LOC_PARTNER_INPUT_FIELD}    ${PARTNER_NAME}
     Input Text    ${ADD_LOC_CITY_INPUT_FIELD}    ${CITY}
     Input Text    ${ADD_LOC_ZIP_CODE_INPUT_FIELD}    ${ZIP_CODE}
-    Log    ${ADD_LOC_ZIP_CODE_INPUT_FIELD}
     Input Text    ${ADD_LOC_STR_INPUT_FIELD}    ${STREET_NAME}
     Input Text    ${ADD_LOC_STR_NUM_INPUT_FIELD}    ${STR_NUM}
 
@@ -135,4 +140,6 @@ Verify Location Profile Created
     Click Element    ${SAVE_BUTTON}
     Wait Until Page Contains Element    //td[contains(text(), "${PARTNER_NAME}")]    10s
     Element Should Contain    //td[contains(text(), "${PARTNER_NAME}")]    ${PARTNER_NAME}
-    Element Should Contain    //td[contains(text(), "${STREET_NAME}")]    ${STREET_NAME}
+    Element Should Contain    [aria-label="${CITY}"]    ${CITY}
+    Element Should Contain    //a[contains(.,"${ZIP_CODE}")]    ${ZIP_CODE}
+    Element Should Contain    //a[contains(.,"${STREET_NAME}")]    ${STREET_NAME}
