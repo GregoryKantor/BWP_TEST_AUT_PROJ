@@ -1,6 +1,7 @@
 *** Settings ***
 Library    SeleniumLibrary
 Library    RequestsLibrary
+Library    Collections
 
 *** Variables ***
 # URLs
@@ -138,17 +139,29 @@ Verify Location Profile Created
     #Element Should Contain    //td[text()='${ZIP_CODE}']    ${ZIP_CODE}
     Element Should Contain    //a[contains(.,"${STREET_NAME}")]    ${STREET_NAME}
 
-Get Random Device Data From API (NO PROXY)
-    ${api_response_device}    GET    ${API_DEVICE_URL}
-    ${api_data_body_device}    Set Variable    ${api_response_device.json()}
-    Log    ${api_data_body_device}
-    ${manufacturer}    Set Variable    ${api_data_body_device}\[manufacturer\]
-    ${model}    Set Variable    ${api_data_body_device}\[model\]
-    ${platform}    Set Variable    ${api_data_body_device}\[platform\]
-    ${serial_number}    Set Variable    ${api_data_body_device}\[serial_number\]
+Extract Device Data
+    [Arguments]    ${device_data}
+    ${manufacturer}=    Get From Dictionary    ${device_data}    manufacturer
+    ${model}=    Get From Dictionary    ${device_data}    model
+    ${platform}=    Get From Dictionary    ${device_data}    platform
+    ${serial_number}=    Get From Dictionary    ${device_data}    serial_number
+    RETURN    ${manufacturer}    ${model}    ${platform}    ${serial_number}
 
-    Set Suite Variable    ${API_DATA_DEVICE}    ${api_data_body_device}
-    Set Suite Variable    ${MANUFACTURER_DEVICE}    ${manufacturer}
-    Set Suite Variable    ${MODEL_DEVICE}    ${model}
-    Set Suite Variable    ${PLATFORM_DEVICE}    ${platform}
-    Set Suite Variable    ${SERIAL_NUMBER_DEVICE}    ${serial_number}
+Set Device Variables
+    [Arguments]    ${index}    ${device_data}
+    ${manufacturer}    ${model}    ${platform}    ${serial_number}=    Extract Device Data    ${device_data}
+    Set Suite Variable    ${API_DATA_DEVICE_${index}}    ${device_data}
+    Set Suite Variable    ${MANUFACTURER_DEVICE_${index}}    ${manufacturer}
+    Set Suite Variable    ${MODEL_DEVICE_${index}}    ${model}
+    Set Suite Variable    ${PLATFORM_DEVICE_${index}}    ${platform}
+    Set Suite Variable    ${SERIAL_NUMBER_DEVICE_${index}}    ${serial_number}
+
+Get Random Device Data From API (NO PROXY)
+    ${api_response_device}=    GET    ${API_DEVICE_URL}
+    ${api_data_body_device_list}=    Set Variable    ${api_response_device.json()}
+    
+    ${api_data_body_device_1}=    Get From List    ${api_data_body_device_list}    0
+    Set Device Variables    1    ${api_data_body_device_1}
+
+    ${api_data_body_device_2}=    Get From List    ${api_data_body_device_list}    1
+    Set Device Variables    2    ${api_data_body_device_2}
