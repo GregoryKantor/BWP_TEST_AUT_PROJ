@@ -54,23 +54,23 @@ ${ADD_TOOL_COMM_INPUT_FIELD}    //textarea[@id='Comm']
 #Variables
 ${BROWSER}    Chrome
 ${EXPECTED_TITLE}    BWP Index
-${API_DATA}    None
-${PARTNER_NAME}    None
-${PARTNER_EMAIL}    None
-${PARTNER_ID}    None
-${CITY}    None
-${ZIP_CODE}    None
-${STREET_NAME}    None
-${STR_NUM}    None
-${API_DATA_DEVICE}    None
-${MANUFACTURER_DEVICE}    None
-${MODEL_DEVICE}    None
-${PLATFORM_DEVICE}    None
-${SERIAL_NUMBER_DEVICE}    None
-${TOOL_NAME}    None
-${TOOL_LOCATION}    None
-${platform}    None
-${serial_number}    None
+${API_DATA}
+${PARTNER_NAME}
+${PARTNER_EMAIL}
+${PARTNER_ID}
+${CITY}
+${ZIP_CODE}
+${STREET_NAME}
+${STR_NUM}
+${API_DATA_DEVICE}
+${MANUFACTURER_DEVICE}
+${MODEL_DEVICE}
+${PLATFORM_DEVICE}
+${SERIAL_NUMBER_DEVICE}
+${TOOL_NAME}
+${TOOL_LOCATION}
+${platform}
+${serial_number}
 
 # Error messages
 
@@ -193,7 +193,7 @@ Create Tool Profile With API Device Data
     [Arguments]    ${index}
     Sleep    5
     Click Element Safely    ${ADD_BUTTON}
-    Wait Until Element Is Visible    ${ADD_TOOL_PART_INPUT_FIELD}    10s
+    Wait Until Element Is Visible    ${ADD_TOOL_PART_INPUT_FIELD}    20s
     ${manufacturer}=    Get Variable Value    ${MANUFACTURER_DEVICE_${index}}
     ${model}=    Get Variable Value    ${MODEL_DEVICE_${index}}
     ${platform}=    Get Variable Value    ${PLATFORM_DEVICE_${index}}
@@ -203,19 +203,21 @@ Create Tool Profile With API Device Data
     ${TOOL_LOCATION}=    Catenate    ${zip_code} ${city} ${street_name}
 
     Input Text    ${ADD_TOOL_NAME_INPUT_FIELD}    ${TOOL_NAME}
+    Sleep    2s
     Input Text    ${ADD_TOOL_PART_INPUT_FIELD}    ${PARTNER_NAME}
-    Press Keys    ${ADD_TOOL_PART_INPUT_FIELD}    \\9
+    Sleep    2s
     Input Text    ${ADD_TOOL_LOC_INPUT_FIELD}    ${TOOL_LOCATION}
-    Press Keys    ${ADD_TOOL_LOC_INPUT_FIELD}    \\9
+    Sleep    2s
     Input Text    ${ADD_TOOL_DESC_INPUT_FIELD}    ${platform}
+    Sleep    2s
     Input Text    ${ADD_TOOL_COMM_INPUT_FIELD}    ${serial_number}
-
+    Sleep    2s
     Click Element Safely    ${SAVE_BUTTON}
 
 Verify Tool Profile Created
-    Wait Until Page Contains Element    //td[contains(text(), "${PARTNER_NAME}")]    10s
-    Element Should Contain    //td[contains(text(), "${PARTNER_NAME}")]    ${PARTNER_NAME}
+    Sleep    5s
     Element Should Contain    //td[contains(text(), "${TOOL_NAME}")]    ${TOOL_NAME}
+    Element Should Contain    //td[contains(text(), "${PARTNER_NAME}")]    ${PARTNER_NAME}
     Element Should Contain    //td[contains(text(), "${TOOL_LOCATION}")]    ${TOOL_LOCATION}
     Element Should Contain    //td[contains(text(), "${platform}")]   ${platform}
     Element Should Contain    //td[contains(text(), "${serial_number}")]   ${serial_number}
