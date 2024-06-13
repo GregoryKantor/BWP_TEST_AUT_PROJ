@@ -22,3 +22,13 @@ BWP Client Function Test
     Verify Location Profile Created
 
     Get Random Device Data From API (NO PROXY)
+
+    Navigate To Tool Menu Element
+
+    Create Tool Profile With API Device Data    1
+
+    Verify Tool Profile Created
+
+    Create Tool Profile With API Device Data    2
+
+    Verify Tool Profile Created
