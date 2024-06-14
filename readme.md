@@ -1,5 +1,5 @@
-# Sauce Demo Website Test Automation
-This is a Robot Framework test automation project for the Sauce Demo website (https://www.saucedemo.com/). The project includes test cases covering various functionalities of the website, such as login, cart operations, and checkout process.
+# BWP Website Test Automation
+This is a Robot Framework test automation project for the BWP nyilvántartó website (https://bwpool.azurewebsites.net). The project includes a test case covering various customer functionalities of the website.
 
 ## Prerequisites
 - Python 3.x (Robot Framework is Python-based)
