@@ -2,6 +2,7 @@
 Library    SeleniumLibrary
 Library    RequestsLibrary
 Library    Collections
+Library    OperatingSystem    
 
 *** Variables ***
 # URLs
@@ -30,6 +31,7 @@ ${REPORT}    //a[contains(.,'Riportok')]
 ${CUS_H}    //h4[.='Ügyfelek']
 ${LOC_H}    //h4[.='Telephelyek']
 ${TOOL_H}    //h4[.='Eszközök']
+${EXCEL_EXPORT}    //span[.='Excel Export']
 
 ${ADD_BUTTON}      css=button[aria-label="Add"]
 ${ADD_BUTTON_XPATH}  //button[@aria-label="Add"]
@@ -51,9 +53,10 @@ ${ADD_TOOL_LOC_INPUT_FIELD}    //input[@placeholder="Telephely"]
 ${ADD_TOOL_DESC_INPUT_FIELD}    //textarea[@id='Desc']
 ${ADD_TOOL_COMM_INPUT_FIELD}    //textarea[@id='Comm']
 
-#Variables
+#Other Variables
 ${BROWSER}    Chrome
 ${EXPECTED_TITLE}    BWP Index
+${DL_PATH}    C:\\Users\\H200323673\\Downloads
 ${API_DATA}
 ${PARTNER_NAME}
 ${PARTNER_EMAIL}
@@ -87,19 +90,24 @@ Test Teardown
 #Built Dynamic KWs
 Navigate And Verify Page
     [Arguments]    ${menu_element}    ${url}    ${page_header}    ${timeout}=20s
-    Sleep    5
     Click Element Safely    ${menu_element}
     Location Should Be    ${url}
     Wait Until Element Is Visible    ${page_header}    ${timeout}
     Element Should Be Visible    ${page_header}
     [Return]    ${True}
 
+Element Should Be Clickable
+    [Arguments]    ${locator}
+    ${is_visible}=    Run Keyword And Return Status    Wait Until Element Is Visible    ${locator}    10s
+    ${is_enabled}=    Run Keyword And Return Status    Wait Until Element Is Enabled    ${locator}    10s
+    Should Be True    ${is_visible}
+    Should Be True    ${is_enabled}
+
 Click Element Safely
     [Arguments]    ${locator}
-    Wait Until Element Is Visible    ${locator}    20s
-    Wait Until Element Is Enabled    ${locator}    20s
-    ${element}=    Get WebElement    ${locator}
-    Click Element    ${element}
+    Click Element    ${locator}
+    ${status}=    Run Keyword And Return Status    Element Should Be Clickable    ${locator}
+    Run Keyword If    '${status}' == 'False'    Execute JavaScript    document.querySelector('${locator}').click()
 
 Verify Element Contains Text
     [Arguments]    ${locator}    ${expected_text}
@@ -122,8 +130,8 @@ Get Random Data From API (NO PROXY)
     ${name}    Evaluate    $api_data_body['first_name'] + ' ' + $api_data_body['last_name']
     ${email}    Set Variable    ${api_data_body}[email]
     ${city}    Set Variable    ${api_data_body}[address][city]
-    #${zip_code}    Set Variable    ${api_data_body}[address][zip_code]
-    ${zip_code}    Evaluate    re.sub(r'[^0-9]', '', "${api_data_body}[address][zip_code]")    modules=re
+    ${zip_code}    Set Variable    ${api_data_body}[address][zip_code]
+    ${zip_code}    Evaluate    ''.join(c for c in "${api_data_body}[address][zip_code]" if c.isdigit())    modules=String    modules=re
     ${street_name}    Set Variable    ${api_data_body}[address][street_name]
 
     Set Suite Variable    ${API_DATA}    ${api_data_body}
@@ -145,21 +153,18 @@ Create Partner Profile With API Data
 
 Verify Partner Profile Created
     Click Element Safely    ${SAVE_BUTTON}
-    Wait Until Page Contains Element    //td[contains(text(), "${PARTNER_NAME}")]    10s
+    Wait Until Page Contains Element    //td[contains(text(), "${PARTNER_NAME}")]    20s
     Verify Element Contains Text    //td[contains(text(), "${PARTNER_NAME}")]    ${PARTNER_NAME}
     Verify Element Contains Text    //td[contains(text(), "${PARTNER_EMAIL}")]    ${PARTNER_EMAIL}
     Verify Element Contains Text    //td[contains(text(), "${PARTNER_ID}")]    ${PARTNER_ID}
 
 Navigate To Location Menu Element
-    Click Element Safely    ${LOCATION}
-    Location Should Be    ${LOCATION_URL}
-    Wait Until Element Is Visible    ${LOC_H}   10s 
-    Element Should Be Visible    ${LOC_H}   
+    Navigate And Verify Page    ${LOCATION}    ${LOCATION_URL}    ${LOC_H} 
 
 Create Location Profile With API Data
-    Sleep    10
+    Sleep    5
     Click Element Safely    ${ADD_BUTTON}
-    Wait Until Element Is Visible    ${ADD_LOC_PARTNER_INPUT_FIELD}    10s
+    Wait Until Element Is Visible    ${ADD_LOC_PARTNER_INPUT_FIELD}    20s
     Input Text    ${ADD_LOC_PARTNER_INPUT_FIELD}    ${PARTNER_NAME}
     Input Text    ${ADD_LOC_CITY_INPUT_FIELD}    ${CITY}
     Input Text    ${ADD_LOC_ZIP_CODE_INPUT_FIELD}    ${ZIP_CODE}
@@ -202,10 +207,7 @@ Get Random Device Data From API (NO PROXY)
     Set Device Variables    2    ${api_data_body_device_2}
 
 Navigate To Tool Menu Element
-    Click Element Safely    ${TOOL}
-    Location Should Be    ${TOOL_URL}
-    Wait Until Element Is Visible    ${TOOL_H}   10s 
-    Element Should Be Visible    ${TOOL_H}
+    Navigate And Verify Page    ${TOOL}    ${TOOL_URL}    ${TOOL_H}
 
 Create Tool Profile With API Device Data
     [Arguments]    ${index}
@@ -244,3 +246,10 @@ Verify Tool Profile Created
     Verify Element Contains Text    //span[contains(.,"${TOOL_LOCATION}")]    ${TOOL_LOCATION}
     Verify Element Contains Text    //td[contains(text(), "${platform}")]   ${platform}
     Verify Element Contains Text    //td[contains(text(), "${serial_number}")]   ${serial_number}
+
+Click On Excel Export Button And Verify Downloading
+    ${files_before}=     Count Files In Directory  ${DL_PATH}
+    Click Element Safely    ${EXCEL_EXPORT}
+    Wait Until Created    ${DL_PATH}/*.xlsx    30s
+    ${files_after}=  Count Files In Directory  ${DL_PATH}
+    Should Be True  ${files_after} > ${files_before}

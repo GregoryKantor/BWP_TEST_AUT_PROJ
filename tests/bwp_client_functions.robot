@@ -32,3 +32,5 @@ BWP Client Function Test
     Create Tool Profile With API Device Data    2
 
     Verify Tool Profile Created
+
+    Click On Excel Export Button And Verify Downloading
