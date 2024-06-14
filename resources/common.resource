@@ -76,28 +76,43 @@ ${serial_number}
 
 
 *** Keywords ***
+#Basic KWs
 Test Setup
     Open Browser    ${HOMEPAGE_URL}    ${BROWSER}
     Maximize Browser Window
 
 Test Teardown
     Close All Browsers
-    
-Test Homepage Loaded    
-    Title Should Be    ${EXPECTED_TITLE}
 
-Navigate To Partner Menu Element
+#Built Dynamic KWs
+Navigate And Verify Page
+    [Arguments]    ${menu_element}    ${url}    ${page_header}    ${timeout}=20s
     Sleep    5
-    Click Element Safely    ${CUSTOMER}
-    Location Should Be    ${CUSTOMER_URL}
-    Wait Until Element Is Visible    ${CUS_H}   10s
-    Element Should Be Visible    ${CUS_H}
+    Click Element Safely    ${menu_element}
+    Location Should Be    ${url}
+    Wait Until Element Is Visible    ${page_header}    ${timeout}
+    Element Should Be Visible    ${page_header}
+    [Return]    ${True}
 
 Click Element Safely
     [Arguments]    ${locator}
     Wait Until Element Is Visible    ${locator}    20s
+    Wait Until Element Is Enabled    ${locator}    20s
     ${element}=    Get WebElement    ${locator}
     Click Element    ${element}
+
+Verify Element Contains Text
+    [Arguments]    ${locator}    ${expected_text}
+    Wait Until Element Is Visible    ${locator}    20s
+    Wait Until Element Is Enabled    ${locator}    20s
+    Element Should Contain    ${locator}    ${expected_text}
+
+#KWs in the Test Case
+Test Homepage Loaded    
+    Title Should Be    ${EXPECTED_TITLE}
+
+Navigate To Customer Page
+    Navigate And Verify Page    ${CUSTOMER}    ${CUSTOMER_URL}    ${CUS_H}
 
 Get Random Data From API (NO PROXY)
     ${api_response}    GET    ${API_URL}
@@ -107,7 +122,8 @@ Get Random Data From API (NO PROXY)
     ${name}    Evaluate    $api_data_body['first_name'] + ' ' + $api_data_body['last_name']
     ${email}    Set Variable    ${api_data_body}[email]
     ${city}    Set Variable    ${api_data_body}[address][city]
-    ${zip_code}    Set Variable    ${api_data_body}[address][zip_code]
+    #${zip_code}    Set Variable    ${api_data_body}[address][zip_code]
+    ${zip_code}    Evaluate    re.sub(r'[^0-9]', '', "${api_data_body}[address][zip_code]")    modules=re
     ${street_name}    Set Variable    ${api_data_body}[address][street_name]
 
     Set Suite Variable    ${API_DATA}    ${api_data_body}
@@ -118,9 +134,11 @@ Get Random Data From API (NO PROXY)
     Set Suite Variable    ${ZIP_CODE}    ${zip_code}
     Set Suite Variable    ${STREET_NAME}    ${street_name}
 
+
+
 Create Partner Profile With API Data
     Click Element Safely    ${ADD_BUTTON}
-    Wait Until Element Is Visible    ${ADD_CUS_NAME_INPUT_FIELD}    10s
+    Wait Until Element Is Visible    ${ADD_CUS_NAME_INPUT_FIELD}    20s
     Input Text    ${ADD_CUS_NAME_INPUT_FIELD}    ${PARTNER_NAME}
     Input Text    ${ADD_CUS_EMAIL_INPUT_FIELD}    ${PARTNER_EMAIL}
     Input Text    ${ADD_CUS_COMMENT_INPUT_FIELD}   ${PARTNER_ID}
@@ -128,9 +146,9 @@ Create Partner Profile With API Data
 Verify Partner Profile Created
     Click Element Safely    ${SAVE_BUTTON}
     Wait Until Page Contains Element    //td[contains(text(), "${PARTNER_NAME}")]    10s
-    Element Should Contain    //td[contains(text(), "${PARTNER_NAME}")]    ${PARTNER_NAME}
-    Element Should Contain    //td[contains(text(), "${PARTNER_EMAIL}")]    ${PARTNER_EMAIL}
-    Element Should Contain    //td[contains(text(), "${PARTNER_ID}")]    ${PARTNER_ID}
+    Verify Element Contains Text    //td[contains(text(), "${PARTNER_NAME}")]    ${PARTNER_NAME}
+    Verify Element Contains Text    //td[contains(text(), "${PARTNER_EMAIL}")]    ${PARTNER_EMAIL}
+    Verify Element Contains Text    //td[contains(text(), "${PARTNER_ID}")]    ${PARTNER_ID}
 
 Navigate To Location Menu Element
     Click Element Safely    ${LOCATION}
@@ -151,10 +169,10 @@ Create Location Profile With API Data
 Verify Location Profile Created
     Click Element Safely    ${SAVE_BUTTON}
     Wait Until Page Contains Element    //td[contains(text(), "${PARTNER_NAME}")]    10s
-    Element Should Contain    //td[contains(text(), "${PARTNER_NAME}")]    ${PARTNER_NAME}
-    Element Should Contain    //td[text()='${CITY}']    ${CITY}
-    #Element Should Contain    //td[text()='${ZIP_CODE}']    ${ZIP_CODE}
-    Element Should Contain    //a[contains(.,"${STREET_NAME}")]    ${STREET_NAME}
+    Verify Element Contains Text    //td[contains(text(), "${PARTNER_NAME}")]    ${PARTNER_NAME}
+    Verify Element Contains Text    //td[text()='${CITY}']    ${CITY}
+    Verify Element Contains Text    //td[contains(text(), '${ZIP_CODE}')]    ${ZIP_CODE}
+    Verify Element Contains Text    //a[contains(.,"${STREET_NAME}")]    ${STREET_NAME}
 
 Extract Device Data
     [Arguments]    ${device_data}
@@ -200,24 +218,29 @@ Create Tool Profile With API Device Data
     ${serial_number}=    Get Variable Value    ${SERIAL_NUMBER_DEVICE_${index}}
 
     ${TOOL_NAME}=    Catenate    ${manufacturer} ${model}
-    ${TOOL_LOCATION}=    Catenate    ${zip_code} ${city} ${street_name}
+    ${TOOL_LOCATION}=    Catenate    ${zip_code} ${city}, ${street_name}
+
+    Set Suite Variable    ${TOOL_NAME}
+    Set Suite Variable    ${PARTNER_NAME}
+    Set Suite Variable    ${TOOL_LOCATION}
+    Set Suite Variable    ${platform}
+    Set Suite Variable    ${serial_number}
 
     Input Text    ${ADD_TOOL_NAME_INPUT_FIELD}    ${TOOL_NAME}
-    Sleep    2s
+    Sleep    1s
     Input Text    ${ADD_TOOL_PART_INPUT_FIELD}    ${PARTNER_NAME}
-    Sleep    2s
+    Sleep    1s
     Input Text    ${ADD_TOOL_LOC_INPUT_FIELD}    ${TOOL_LOCATION}
-    Sleep    2s
+    Sleep    1s
     Input Text    ${ADD_TOOL_DESC_INPUT_FIELD}    ${platform}
-    Sleep    2s
+    Sleep    1s
     Input Text    ${ADD_TOOL_COMM_INPUT_FIELD}    ${serial_number}
-    Sleep    2s
+    Sleep    1s
     Click Element Safely    ${SAVE_BUTTON}
 
 Verify Tool Profile Created
-    Sleep    5s
-    Element Should Contain    //td[contains(text(), "${TOOL_NAME}")]    ${TOOL_NAME}
-    Element Should Contain    //td[contains(text(), "${PARTNER_NAME}")]    ${PARTNER_NAME}
-    Element Should Contain    //td[contains(text(), "${TOOL_LOCATION}")]    ${TOOL_LOCATION}
-    Element Should Contain    //td[contains(text(), "${platform}")]   ${platform}
-    Element Should Contain    //td[contains(text(), "${serial_number}")]   ${serial_number}
+    Verify Element Contains Text    //td[contains(text(), "${TOOL_NAME}")]    ${TOOL_NAME}
+    Verify Element Contains Text    //td[contains(text(), "${PARTNER_NAME}")]    ${PARTNER_NAME}
+    Verify Element Contains Text    //span[contains(.,"${TOOL_LOCATION}")]    ${TOOL_LOCATION}
+    Verify Element Contains Text    //td[contains(text(), "${platform}")]   ${platform}
+    Verify Element Contains Text    //td[contains(text(), "${serial_number}")]   ${serial_number}

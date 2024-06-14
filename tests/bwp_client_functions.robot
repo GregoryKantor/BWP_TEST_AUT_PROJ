@@ -7,7 +7,7 @@ Test Teardown    Test Teardown
 BWP Client Function Test
     Test Homepage Loaded
 
-    Navigate To Partner Menu Element
+    Navigate To Customer Page
 
     Get Random Data From API (NO PROXY)
 
