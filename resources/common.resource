@@ -32,6 +32,7 @@ ${REPORT}    //a[contains(.,'Riportok')]
 ${CUS_H}    //h4[.='Ügyfelek']
 ${LOC_H}    //h4[.='Telephelyek']
 ${TOOL_H}    //h4[.='Eszközök']
+${LOC_INFO_H}    //h6[.='Telephely adatok']
 
 ${EXCEL_EXP_BUTTON}    //button[@aria-label="Excel Export"]
 ${ADD_BUTTON}      css=button[aria-label="Add"]
@@ -54,10 +55,14 @@ ${ADD_TOOL_LOC_INPUT_FIELD}    //input[@placeholder="Telephely"]
 ${ADD_TOOL_DESC_INPUT_FIELD}    //textarea[@id='Desc']
 ${ADD_TOOL_COMM_INPUT_FIELD}    //textarea[@id='Comm']
 
+${SEARCHBAR}    //input[@id='Grid_ToolbarSearchBox']
+${START_SEARCH}    //span[@title='Search']
+${LOCATION_INFO_LINK}    //td/div/div/a
+
 #Other Variables
 ${BROWSER}    Chrome
 ${EXPECTED_TITLE}    BWP Index
-${DL_PATH}    C:\\Users\\H200323673\\Downloads
+${DL_PATH}    C:\\Users\\eszte\\Downloads
 ${DL_WIN_TITLE}    Letöltések
 ${CUSTOM_KW}    ${EXECDIR}/custom_kw_defs.py
 
@@ -98,7 +103,7 @@ Navigate And Verify Page
     Location Should Be    ${url}
     Wait Until Element Is Visible    ${page_header}    ${timeout}
     Element Should Be Visible    ${page_header}
-    [Return]    ${True}
+    RETURN    ${True}
 
 Click Element Safely
     #[Arguments]    ${locator}
@@ -112,7 +117,6 @@ Click Element Safely
         ${status}=    Run Keyword And Return Status    Click Element    ${locator}
         Run Keyword If    '${status}' == 'True'    Return From Keyword
         Log    Retry clicking the element, attempt: ${index + 1}
-        Sleep    1s
     END
     Fail    Failed to click the element after ${retries} attempts
 
@@ -122,13 +126,11 @@ Verify Element Contains Text
     Wait Until Element Is Enabled    ${locator}    20s
     Element Should Contain    ${locator}    ${expected_text}
 
-
-
 #KWs in the Test Case
 Test Homepage Loaded    
     Title Should Be    ${EXPECTED_TITLE}
 
-Navigate To Customer Page
+Navigate To Customer Menu Element
     Navigate And Verify Page    ${CUSTOMER}    ${CUSTOMER_URL}    ${CUS_H}
 
 Get Random Data From API (NO PROXY)
@@ -136,10 +138,12 @@ Get Random Data From API (NO PROXY)
     ${api_data_body}    Set Variable    ${api_response.json()}
     
     
-    FOR    ${retry}    IN RANGE    5
+    FOR    ${retry}    IN RANGE    3
         ${zip_code}    Set Variable    ${api_data_body}[address][zip_code]
         ${zip_code_starts_with_zero}=    Evaluate    str("${zip_code}").startswith("0")
         Exit For Loop If    ${zip_code_starts_with_zero} == False
+        ${api_response}=    GET    ${API_URL}
+        ${api_data_body}=    Set Variable    ${api_response.json()}
     END
 
     ${zip_code}    Evaluate    ''.join(c for c in "${api_data_body}[address][zip_code]" if c.isdigit())
@@ -177,7 +181,6 @@ Navigate To Location Menu Element
     Navigate And Verify Page    ${LOCATION}    ${LOCATION_URL}    ${LOC_H} 
 
 Create Location Profile With API Data
-    #Sleep    5
     Click Element Safely    ${ADD_BUTTON}
     Wait Until Element Is Visible    ${ADD_LOC_PARTNER_INPUT_FIELD}    20s
     Input Text    ${ADD_LOC_PARTNER_INPUT_FIELD}    ${PARTNER_NAME}
@@ -226,7 +229,6 @@ Navigate To Tool Menu Element
 
 Create Tool Profile With API Device Data
     [Arguments]    ${index}
-    #Sleep    5
     Click Element Safely    ${ADD_BUTTON}
     Wait Until Element Is Visible    ${ADD_TOOL_PART_INPUT_FIELD}    20s
     ${manufacturer}=    Get Variable Value    ${MANUFACTURER_DEVICE_${index}}
@@ -260,11 +262,24 @@ Verify Tool Profile Created
     Verify Element Contains Text    //td[contains(text(), "${PARTNER_NAME}")]    ${PARTNER_NAME}
     Verify Element Contains Text    //span[contains(.,"${TOOL_LOCATION}")]    ${TOOL_LOCATION}
     Verify Element Contains Text    //td[contains(text(), "${platform}")]   ${platform}
-    Verify Element Contains Text    //td[contains(text(), "${serial_number}")]   ${serial_number}
+    Verify Element Contains Text    //td[contains(text(), "${serial_number}")]    ${serial_number}
 
 Click On Excel Export Button And Verify Downloading
     ${files_before}=     Count Files In Directory  ${DL_PATH}
     Click Element Safely    ${EXCEL_EXP_BUTTON}
-    Wait Until Keyword Succeeds    30s    1s    File Should Exist    ${DL_PATH}/Export*.xlsx
+    Wait Until Keyword Succeeds    60s    1s    File Should Exist    ${DL_PATH}/Export*.xlsx
     ${files_after}=  Count Files In Directory  ${DL_PATH}
+    Sleep    1s
     Should Be True  ${files_after} > ${FILES_BEFORE}
+
+Location Query With Searchbar Tool
+    Click Element Safely    ${SEARCHBAR}
+    Wait Until Element Is Visible    ${SEARCHBAR}
+    Input Text    ${SEARCHBAR}    ${PARTNER_NAME}
+    Click Element Safely    ${START_SEARCH}
+    Verify Element Contains Text    //td[@class='e-rowcell ' and contains(text(), '${PARTNER_NAME}')]    ${PARTNER_NAME}
+
+Get Location Info
+    Click Element Safely    ${LOCATION_INFO_LINK}
+    Wait Until Element Is Visible    ${LOC_INFO_H}
+    Verify Element Contains Text    //td[text()="${PARTNER_NAME}"]    ${PARTNER_NAME}

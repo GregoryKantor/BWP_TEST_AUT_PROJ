@@ -7,7 +7,7 @@ Test Teardown    Test Teardown
 BWP Client Function Test
     Test Homepage Loaded
 
-    Navigate To Customer Page
+    Navigate To Customer Menu Element
 
     Get Random Data From API (NO PROXY)
 
@@ -34,3 +34,9 @@ BWP Client Function Test
     Verify Tool Profile Created
 
     Click On Excel Export Button And Verify Downloading
+
+    Navigate To Location Menu Element
+
+    Location Query With Searchbar Tool
+
+    Get Location Info
