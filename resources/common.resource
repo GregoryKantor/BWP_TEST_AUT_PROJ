@@ -2,7 +2,8 @@
 Library    SeleniumLibrary
 Library    RequestsLibrary
 Library    Collections
-Library    OperatingSystem    
+Library    OperatingSystem
+Library    Process
 
 *** Variables ***
 # URLs
@@ -31,8 +32,8 @@ ${REPORT}    //a[contains(.,'Riportok')]
 ${CUS_H}    //h4[.='Ügyfelek']
 ${LOC_H}    //h4[.='Telephelyek']
 ${TOOL_H}    //h4[.='Eszközök']
-${EXCEL_EXPORT}    //span[.='Excel Export']
 
+${EXCEL_EXP_BUTTON}    //button[@aria-label="Excel Export"]
 ${ADD_BUTTON}      css=button[aria-label="Add"]
 ${ADD_BUTTON_XPATH}  //button[@aria-label="Add"]
 ${SAVE_BUTTON}    //button[@class='e-control e-btn e-lib e-control e-btn e-lib e-primary e-flat']
@@ -57,6 +58,9 @@ ${ADD_TOOL_COMM_INPUT_FIELD}    //textarea[@id='Comm']
 ${BROWSER}    Chrome
 ${EXPECTED_TITLE}    BWP Index
 ${DL_PATH}    C:\\Users\\H200323673\\Downloads
+${DL_WIN_TITLE}    Letöltések
+${CUSTOM_KW}    ${EXECDIR}/custom_kw_defs.py
+
 ${API_DATA}
 ${PARTNER_NAME}
 ${PARTNER_EMAIL}
@@ -96,24 +100,29 @@ Navigate And Verify Page
     Element Should Be Visible    ${page_header}
     [Return]    ${True}
 
-Element Should Be Clickable
-    [Arguments]    ${locator}
-    ${is_visible}=    Run Keyword And Return Status    Wait Until Element Is Visible    ${locator}    10s
-    ${is_enabled}=    Run Keyword And Return Status    Wait Until Element Is Enabled    ${locator}    10s
-    Should Be True    ${is_visible}
-    Should Be True    ${is_enabled}
-
 Click Element Safely
-    [Arguments]    ${locator}
-    Click Element    ${locator}
-    ${status}=    Run Keyword And Return Status    Element Should Be Clickable    ${locator}
-    Run Keyword If    '${status}' == 'False'    Execute JavaScript    document.querySelector('${locator}').click()
+    #[Arguments]    ${locator}
+    #Click Element    ${locator}
+    #${status}=    Run Keyword And Return Status    Element Should Be Clickable    ${locator}
+    #Run Keyword If    '${status}' == 'False'    Execute JavaScript    document.querySelector('${locator}').click()
+    [Arguments]    ${locator}    ${retries}=3
+    FOR    ${index}    IN RANGE    ${retries}
+        Wait Until Element Is Visible    ${locator}    20s
+        Wait Until Element Is Enabled    ${locator}    20s
+        ${status}=    Run Keyword And Return Status    Click Element    ${locator}
+        Run Keyword If    '${status}' == 'True'    Return From Keyword
+        Log    Retry clicking the element, attempt: ${index + 1}
+        Sleep    1s
+    END
+    Fail    Failed to click the element after ${retries} attempts
 
 Verify Element Contains Text
     [Arguments]    ${locator}    ${expected_text}
     Wait Until Element Is Visible    ${locator}    20s
     Wait Until Element Is Enabled    ${locator}    20s
     Element Should Contain    ${locator}    ${expected_text}
+
+
 
 #KWs in the Test Case
 Test Homepage Loaded    
@@ -125,13 +134,19 @@ Navigate To Customer Page
 Get Random Data From API (NO PROXY)
     ${api_response}    GET    ${API_URL}
     ${api_data_body}    Set Variable    ${api_response.json()}
+    
+    
+    FOR    ${retry}    IN RANGE    5
+        ${zip_code}    Set Variable    ${api_data_body}[address][zip_code]
+        ${zip_code_starts_with_zero}=    Evaluate    str("${zip_code}").startswith("0")
+        Exit For Loop If    ${zip_code_starts_with_zero} == False
+    END
 
+    ${zip_code}    Evaluate    ''.join(c for c in "${api_data_body}[address][zip_code]" if c.isdigit())
     ${id}    Set Variable    ${api_data_body}[id]
     ${name}    Evaluate    $api_data_body['first_name'] + ' ' + $api_data_body['last_name']
     ${email}    Set Variable    ${api_data_body}[email]
     ${city}    Set Variable    ${api_data_body}[address][city]
-    ${zip_code}    Set Variable    ${api_data_body}[address][zip_code]
-    ${zip_code}    Evaluate    ''.join(c for c in "${api_data_body}[address][zip_code]" if c.isdigit())    modules=String    modules=re
     ${street_name}    Set Variable    ${api_data_body}[address][street_name]
 
     Set Suite Variable    ${API_DATA}    ${api_data_body}
@@ -162,7 +177,7 @@ Navigate To Location Menu Element
     Navigate And Verify Page    ${LOCATION}    ${LOCATION_URL}    ${LOC_H} 
 
 Create Location Profile With API Data
-    Sleep    5
+    #Sleep    5
     Click Element Safely    ${ADD_BUTTON}
     Wait Until Element Is Visible    ${ADD_LOC_PARTNER_INPUT_FIELD}    20s
     Input Text    ${ADD_LOC_PARTNER_INPUT_FIELD}    ${PARTNER_NAME}
@@ -211,7 +226,7 @@ Navigate To Tool Menu Element
 
 Create Tool Profile With API Device Data
     [Arguments]    ${index}
-    Sleep    5
+    #Sleep    5
     Click Element Safely    ${ADD_BUTTON}
     Wait Until Element Is Visible    ${ADD_TOOL_PART_INPUT_FIELD}    20s
     ${manufacturer}=    Get Variable Value    ${MANUFACTURER_DEVICE_${index}}
@@ -249,7 +264,7 @@ Verify Tool Profile Created
 
 Click On Excel Export Button And Verify Downloading
     ${files_before}=     Count Files In Directory  ${DL_PATH}
-    Click Element Safely    ${EXCEL_EXPORT}
-    Wait Until Created    ${DL_PATH}/*.xlsx    30s
+    Click Element Safely    ${EXCEL_EXP_BUTTON}
+    Wait Until Keyword Succeeds    30s    1s    File Should Exist    ${DL_PATH}/Export*.xlsx
     ${files_after}=  Count Files In Directory  ${DL_PATH}
-    Should Be True  ${files_after} > ${files_before}
+    Should Be True  ${files_after} > ${FILES_BEFORE}
