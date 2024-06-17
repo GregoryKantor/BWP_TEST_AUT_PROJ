@@ -3,7 +3,8 @@ Library    SeleniumLibrary
 Library    RequestsLibrary
 Library    Collections
 Library    OperatingSystem
-Library    Process
+Library    excel_kws.py
+
 
 *** Variables ***
 # URLs
@@ -55,9 +56,12 @@ ${ADD_TOOL_LOC_INPUT_FIELD}    //input[@placeholder="Telephely"]
 ${ADD_TOOL_DESC_INPUT_FIELD}    //textarea[@id='Desc']
 ${ADD_TOOL_COMM_INPUT_FIELD}    //textarea[@id='Comm']
 
+${LOCATION_INFO_LINK}    //a[starts-with(@href, 'LocationInfo/')]
+
 ${SEARCHBAR}    //input[@id='Grid_ToolbarSearchBox']
 ${START_SEARCH}    //span[@title='Search']
-${LOCATION_INFO_LINK}    //td/div/div/a
+
+${TABLE_LOCATOR}    //div[@id='Grid']
 
 #Other Variables
 ${BROWSER}    Chrome
@@ -66,8 +70,9 @@ ${DL_PATH}    C:\\Users\\H200323673\\Downloads
 ${DL_WIN_TITLE}    Letöltések
 ${CUSTOM_KW}    ${EXECDIR}/custom_kw_defs.py
 ${CHROMEDRIVER_PATH}    C:\\ChromeDriver\\chromedriver.exe
+${EXCEL_FILE}    Export*.xlsx
 
-${API_DATA}
+
 ${PARTNER_NAME}
 ${PARTNER_EMAIL}
 ${PARTNER_ID}
@@ -75,11 +80,6 @@ ${CITY}
 ${ZIP_CODE}
 ${STREET_NAME}
 ${STR_NUM}
-${API_DATA_DEVICE}
-${MANUFACTURER_DEVICE}
-${MODEL_DEVICE}
-${PLATFORM_DEVICE}
-${SERIAL_NUMBER_DEVICE}
 ${TOOL_NAME}
 ${TOOL_LOCATION}
 ${platform}
@@ -107,7 +107,7 @@ Navigate And Verify Page
     RETURN    ${True}
 
 Click Element Safely
-    [Arguments]    ${locator}    ${retries}=3
+    [Arguments]    ${locator}    ${retries}=5
     FOR    ${index}    IN RANGE    ${retries}
         Wait Until Element Is Visible    ${locator}    20s
         Wait Until Element Is Enabled    ${locator}    20s
@@ -124,13 +124,65 @@ Verify Element Contains Text
     Element Should Contain    ${locator}    ${expected_text}
 
 Handling Serial Number NoneType Data
-    Run Keyword If    '${serial_number}' == 'None'    Set Variable    ${serial_number}
+    Run Keyword If    "${serial_number}" == 'None'    Set Variable    ${serial_number}
     Run Keyword If    "${serial_number}" == None    Set Variable    ${serial_number}
+
+Extract Device Data
+    [Arguments]    ${device_data}
+    ${manufacturer}=    Get From Dictionary    ${device_data}    manufacturer
+    ${model}=    Get From Dictionary    ${device_data}    model
+    ${platform}=    Get From Dictionary    ${device_data}    platform
+    ${serial_number}=    Get From Dictionary    ${device_data}    serial_number
+
+    Handling Serial Number NoneType Data
+
+    RETURN    ${manufacturer}    ${model}    ${platform}    ${serial_number}
+
+Set Device Variables
+    [Arguments]    ${index}    ${device_data}
+    ${manufacturer}    ${model}    ${platform}    ${serial_number}=    Extract Device Data    ${device_data}
+
+    Handling Serial Number NoneType Data
+
+    Set Suite Variable    ${API_DATA_DEVICE_${index}}    ${device_data}
+    Set Suite Variable    ${MANUFACTURER_DEVICE_${index}}    ${manufacturer}
+    Set Suite Variable    ${MODEL_DEVICE_${index}}    ${model}
+    Set Suite Variable    ${PLATFORM_DEVICE_${index}}    ${platform}
+    Set Suite Variable    ${SERIAL_NUMBER_DEVICE_${index}}    ${serial_number}
 
 New File Should Appear
     [Arguments]    ${files_before}    ${directory}
-    ${files_after}=    Count Files In Directory    ${directory}    Export*.xlsx
+    ${files_after}=    Count Files In Directory    ${directory}    ${EXCEL_FILE}
     Should Be True    ${files_after} > ${files_before}
+
+Get Latest Downloaded File
+    [Arguments]    ${DL_PATH}
+    @{files}=    List Files In Directory    ${DL_PATH}    pattern=Export*.xlsx
+    @{file_names}=    Evaluate    [os.path.basename(f) for f in $files]    modules=os
+    @{sorted_files}=    Evaluate    sorted(@{file_names}, key=lambda x: os.path.getmtime(os.path.join(r'${DL_PATH}', x)), reverse=True)    modules=os
+    ${latest_file}=    Get From List    ${sorted_files}    0
+    RETURN    ${DL_PATH}${/}${latest_file}
+
+Read Table Data From Web
+    [Arguments]    ${TABLE_LOCATOR}
+    ${table_rows}=    Get WebElements    ${TABLE_LOCATOR}
+    ${web_data}=    Create List
+    FOR    ${row}    IN    @{table_rows}
+        ${columns}=    Get WebElements    ${row}
+        ${row_data}=    Create List
+        FOR    ${column}    IN    @{columns}
+            ${cell_text}=    Get Text    ${column}
+            Append To List    ${row_data}    ${cell_text}
+        END
+        Append To List    ${web_data}    ${row_data}
+    END
+    RETURN    ${web_data}
+
+Compare Data
+    [Arguments]    ${excel_data}    ${web_data}
+    ${excel_data_str}=    Convert To String    ${excel_data}
+    ${web_data_str}=    Convert To String    ${web_data}
+    Should Be Equal    ${excel_data_str}    ${web_data_str}
 
 #KWs in the Test Case
 Test Homepage Loaded    
@@ -167,8 +219,6 @@ Get Random Data From API (NO PROXY)
     Set Suite Variable    ${ZIP_CODE}    ${zip_code}
     Set Suite Variable    ${STREET_NAME}    ${street_name}
 
-
-
 Create Partner Profile With API Data
     Click Element Safely    ${ADD_BUTTON}
     Wait Until Element Is Visible    ${ADD_CUS_NAME_INPUT_FIELD}    20s
@@ -201,30 +251,7 @@ Verify Location Profile Created
     Verify Element Contains Text    //td[contains(text(), "${PARTNER_NAME}")]    ${PARTNER_NAME}
     Verify Element Contains Text    //td[text()='${CITY}']    ${CITY}
     Verify Element Contains Text    //td[contains(text(), '${ZIP_CODE}')]    ${ZIP_CODE}
-    Verify Element Contains Text    //a[contains(.,"${STREET_NAME}")]    ${STREET_NAME}
-
-Extract Device Data
-    [Arguments]    ${device_data}
-    ${manufacturer}=    Get From Dictionary    ${device_data}    manufacturer
-    ${model}=    Get From Dictionary    ${device_data}    model
-    ${platform}=    Get From Dictionary    ${device_data}    platform
-    ${serial_number}=    Get From Dictionary    ${device_data}    serial_number
-
-    Handling Serial Number NoneType Data
-
-    RETURN    ${manufacturer}    ${model}    ${platform}    ${serial_number}
-
-Set Device Variables
-    [Arguments]    ${index}    ${device_data}
-    ${manufacturer}    ${model}    ${platform}    ${serial_number}=    Extract Device Data    ${device_data}
-
-    Handling Serial Number NoneType Data
-
-    Set Suite Variable    ${API_DATA_DEVICE_${index}}    ${device_data}
-    Set Suite Variable    ${MANUFACTURER_DEVICE_${index}}    ${manufacturer}
-    Set Suite Variable    ${MODEL_DEVICE_${index}}    ${model}
-    Set Suite Variable    ${PLATFORM_DEVICE_${index}}    ${platform}
-    Set Suite Variable    ${SERIAL_NUMBER_DEVICE_${index}}    ${serial_number}
+    Verify Element Contains Text    //a[contains(.,"${STREET_NAME}")]    ${STREET_NAME}    
 
 Get Random Device Data From API (NO PROXY)
     ${api_response_device}=    GET    ${API_DEVICE_URL}
@@ -279,10 +306,10 @@ Verify Tool Profile Created
     Verify Element Contains Text    //td[contains(text(), "${serial_number}")]    ${serial_number}
 
 Click On Excel Export Button And Verify Downloading
-    ${files_before}=     Count Files In Directory  ${DL_PATH}    Export*.xlsx
+    ${files_before}=     Count Files In Directory  ${DL_PATH}    ${EXCEL_FILE}
     Click Element Safely    ${EXCEL_EXP_BUTTON}
     Wait Until Keyword Succeeds    60s    1s    New File Should Appear    ${files_before}    ${DL_PATH}
-    ${files_after}=  Count Files In Directory  ${DL_PATH}    Export*.xlsx
+    ${files_after}=  Count Files In Directory  ${DL_PATH}    ${EXCEL_FILE}
     Should Be True  ${files_after} > ${FILES_BEFORE}
 
 Location Query With Searchbar Tool
@@ -293,6 +320,16 @@ Location Query With Searchbar Tool
     Verify Element Contains Text    //td[@class='e-rowcell ' and contains(text(), '${PARTNER_NAME}')]    ${PARTNER_NAME}
 
 Get Location Info
+    Sleep    2s
     Click Element Safely    ${LOCATION_INFO_LINK}
     Wait Until Element Is Visible    ${LOC_INFO_H}
     Verify Element Contains Text    //td[text()="${PARTNER_NAME}"]    ${PARTNER_NAME}
+
+Verify Excel Matches Web Table
+    ${newest_file}=    Get Latest Downloaded File    ${DL_PATH}
+    ${excel_data}=    Read Excel File    ${newest_file}
+    Set Suite Variable    ${excel_data}
+    ${web_data}=    Read Table Data From Web    ${TABLE_LOCATOR}
+    Set Suite Variable    ${web_data}
+    Compare Data    ${excel_data}    ${web_data}
+    

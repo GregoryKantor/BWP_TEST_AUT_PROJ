@@ -40,3 +40,5 @@ BWP Client Function Test
     Location Query With Searchbar Tool
 
     Get Location Info
+
+    Verify Excel Matches Web Table

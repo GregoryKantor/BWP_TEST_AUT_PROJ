@@ -5,6 +5,7 @@ This is a Robot Framework test automation project for the BWP nyilvántartó web
 - Python 3.x (Robot Framework is Python-based)
 - Robot Framework (Installation: ```pip install robotframework```)
 - Robot Framework SeleniumLibrary (Installation: ```pip install --upgrade robotframework-seleniumlibrary```)
+- pip install pandas openpyxl
 
 ## Installation
 1. Clone the repository:
@@ -20,6 +21,18 @@ cd BWP_TEST_AUT_PROJ
 3. Install the required Python libraries:
 ```
 pip install -r requirements.txt
+```
+
+4. Update the latest Google Chrome, then get the corresponding ChromeDriver and extract the way to get this path:
+```
+C:\ChromeDriver\chromedriver.exe
+```
+5. For the successfull testing:
+Copy the path of the default directory where Google Chrome downloading the files.
+Open the in a text editor this file: BWP_TEST_AUT_PROJ\resources\common.resource
+In the code @row 66 set the variable ${DL_PATH} like this:
+${DL_PATH}    C:\\Users\\YourProfileUsername\\Downloads
+!!!(make sure to replace the \ signs with double \\ sign)!!!
 ```
 
 ## Running Tests
