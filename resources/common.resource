@@ -65,6 +65,7 @@ ${EXPECTED_TITLE}    BWP Index
 ${DL_PATH}    C:\\Users\\H200323673\\Downloads
 ${DL_WIN_TITLE}    Letöltések
 ${CUSTOM_KW}    ${EXECDIR}/custom_kw_defs.py
+${CHROMEDRIVER_PATH}    C:\\ChromeDriver\\chromedriver.exe
 
 ${API_DATA}
 ${PARTNER_NAME}
@@ -90,7 +91,7 @@ ${serial_number}
 *** Keywords ***
 #Basic KWs
 Test Setup
-    Open Browser    ${HOMEPAGE_URL}    ${BROWSER}
+    Open Browser    ${HOMEPAGE_URL}    ${BROWSER}    executable_path=${CHROMEDRIVER_PATH}
     Maximize Browser Window
 
 Test Teardown
@@ -282,7 +283,6 @@ Click On Excel Export Button And Verify Downloading
     Click Element Safely    ${EXCEL_EXP_BUTTON}
     Wait Until Keyword Succeeds    60s    1s    New File Should Appear    ${files_before}    ${DL_PATH}
     ${files_after}=  Count Files In Directory  ${DL_PATH}    Export*.xlsx
-    #Sleep    1s
     Should Be True  ${files_after} > ${FILES_BEFORE}
 
 Location Query With Searchbar Tool
