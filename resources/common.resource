@@ -62,7 +62,7 @@ ${LOCATION_INFO_LINK}    //td/div/div/a
 #Other Variables
 ${BROWSER}    Chrome
 ${EXPECTED_TITLE}    BWP Index
-${DL_PATH}    C:\\Users\\eszte\\Downloads
+${DL_PATH}    C:\\Users\\H200323673\\Downloads
 ${DL_WIN_TITLE}    Letöltések
 ${CUSTOM_KW}    ${EXECDIR}/custom_kw_defs.py
 
@@ -126,6 +126,10 @@ Verify Element Contains Text
     Wait Until Element Is Enabled    ${locator}    20s
     Element Should Contain    ${locator}    ${expected_text}
 
+Handling NoneType Data
+    Run Keyword If    '${serial_number}' == 'None'    Set Variable    ${serial_number}
+    Run Keyword If    "${serial_number}" == None    Set Variable    ${serial_number}
+    
 #KWs in the Test Case
 Test Homepage Loaded    
     Title Should Be    ${EXPECTED_TITLE}
@@ -203,11 +207,17 @@ Extract Device Data
     ${model}=    Get From Dictionary    ${device_data}    model
     ${platform}=    Get From Dictionary    ${device_data}    platform
     ${serial_number}=    Get From Dictionary    ${device_data}    serial_number
+
+    Handling NoneType Data
+
     RETURN    ${manufacturer}    ${model}    ${platform}    ${serial_number}
 
 Set Device Variables
     [Arguments]    ${index}    ${device_data}
     ${manufacturer}    ${model}    ${platform}    ${serial_number}=    Extract Device Data    ${device_data}
+
+    Handling NoneType Data
+
     Set Suite Variable    ${API_DATA_DEVICE_${index}}    ${device_data}
     Set Suite Variable    ${MANUFACTURER_DEVICE_${index}}    ${manufacturer}
     Set Suite Variable    ${MODEL_DEVICE_${index}}    ${model}
@@ -235,6 +245,8 @@ Create Tool Profile With API Device Data
     ${model}=    Get Variable Value    ${MODEL_DEVICE_${index}}
     ${platform}=    Get Variable Value    ${PLATFORM_DEVICE_${index}}
     ${serial_number}=    Get Variable Value    ${SERIAL_NUMBER_DEVICE_${index}}
+
+    Handling NoneType Data
 
     ${TOOL_NAME}=    Catenate    ${manufacturer} ${model}
     ${TOOL_LOCATION}=    Catenate    ${zip_code} ${city}, ${street_name}
