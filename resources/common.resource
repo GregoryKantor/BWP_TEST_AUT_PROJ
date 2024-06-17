@@ -106,10 +106,6 @@ Navigate And Verify Page
     RETURN    ${True}
 
 Click Element Safely
-    #[Arguments]    ${locator}
-    #Click Element    ${locator}
-    #${status}=    Run Keyword And Return Status    Element Should Be Clickable    ${locator}
-    #Run Keyword If    '${status}' == 'False'    Execute JavaScript    document.querySelector('${locator}').click()
     [Arguments]    ${locator}    ${retries}=3
     FOR    ${index}    IN RANGE    ${retries}
         Wait Until Element Is Visible    ${locator}    20s
@@ -126,10 +122,15 @@ Verify Element Contains Text
     Wait Until Element Is Enabled    ${locator}    20s
     Element Should Contain    ${locator}    ${expected_text}
 
-Handling NoneType Data
+Handling Serial Number NoneType Data
     Run Keyword If    '${serial_number}' == 'None'    Set Variable    ${serial_number}
     Run Keyword If    "${serial_number}" == None    Set Variable    ${serial_number}
-    
+
+New File Should Appear
+    [Arguments]    ${files_before}    ${directory}
+    ${files_after}=    Count Files In Directory    ${directory}    Export*.xlsx
+    Should Be True    ${files_after} > ${files_before}
+
 #KWs in the Test Case
 Test Homepage Loaded    
     Title Should Be    ${EXPECTED_TITLE}
@@ -208,7 +209,7 @@ Extract Device Data
     ${platform}=    Get From Dictionary    ${device_data}    platform
     ${serial_number}=    Get From Dictionary    ${device_data}    serial_number
 
-    Handling NoneType Data
+    Handling Serial Number NoneType Data
 
     RETURN    ${manufacturer}    ${model}    ${platform}    ${serial_number}
 
@@ -216,7 +217,7 @@ Set Device Variables
     [Arguments]    ${index}    ${device_data}
     ${manufacturer}    ${model}    ${platform}    ${serial_number}=    Extract Device Data    ${device_data}
 
-    Handling NoneType Data
+    Handling Serial Number NoneType Data
 
     Set Suite Variable    ${API_DATA_DEVICE_${index}}    ${device_data}
     Set Suite Variable    ${MANUFACTURER_DEVICE_${index}}    ${manufacturer}
@@ -246,7 +247,7 @@ Create Tool Profile With API Device Data
     ${platform}=    Get Variable Value    ${PLATFORM_DEVICE_${index}}
     ${serial_number}=    Get Variable Value    ${SERIAL_NUMBER_DEVICE_${index}}
 
-    Handling NoneType Data
+    Handling Serial Number NoneType Data
 
     ${TOOL_NAME}=    Catenate    ${manufacturer} ${model}
     ${TOOL_LOCATION}=    Catenate    ${zip_code} ${city}, ${street_name}
@@ -277,11 +278,11 @@ Verify Tool Profile Created
     Verify Element Contains Text    //td[contains(text(), "${serial_number}")]    ${serial_number}
 
 Click On Excel Export Button And Verify Downloading
-    ${files_before}=     Count Files In Directory  ${DL_PATH}
+    ${files_before}=     Count Files In Directory  ${DL_PATH}    Export*.xlsx
     Click Element Safely    ${EXCEL_EXP_BUTTON}
-    Wait Until Keyword Succeeds    60s    1s    File Should Exist    ${DL_PATH}/Export*.xlsx
-    ${files_after}=  Count Files In Directory  ${DL_PATH}
-    Sleep    1s
+    Wait Until Keyword Succeeds    60s    1s    New File Should Appear    ${files_before}    ${DL_PATH}
+    ${files_after}=  Count Files In Directory  ${DL_PATH}    Export*.xlsx
+    #Sleep    1s
     Should Be True  ${files_after} > ${FILES_BEFORE}
 
 Location Query With Searchbar Tool
