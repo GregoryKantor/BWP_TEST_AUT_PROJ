@@ -43,4 +43,18 @@ BWP Client Function Test
 
     Navigate To Tool Menu Element
 
-    Verify Excel Matches Web Table
+    #Verify Excel Matches Web Table
+
+    Navigate To Tool Menu Element
+
+    Search Created Tool
+
+    Open Tool Profile Editor
+
+    Activate Service Mode
+
+    Navigate To Location Menu Element
+
+    Scroll To The Last Added Partner
+
+    Click On The Street URL

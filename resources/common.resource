@@ -35,6 +35,7 @@ ${CUS_H}    //h4[.='Ügyfelek']
 ${LOC_H}    //h4[.='Telephelyek']
 ${TOOL_H}    //h4[.='Eszközök']
 ${LOC_INFO_H}    //h6[.='Telephely adatok']
+${TOOL_INFO_H}    //h4[.='Eszköz']
 
 ${EXCEL_EXP_BUTTON}    //button[@aria-label="Excel Export"]
 ${ADD_BUTTON}      css=button[aria-label="Add"]
@@ -57,10 +58,14 @@ ${ADD_TOOL_LOC_INPUT_FIELD}    //input[@placeholder="Telephely"]
 ${ADD_TOOL_DESC_INPUT_FIELD}    //textarea[@id='Desc']
 ${ADD_TOOL_COMM_INPUT_FIELD}    //textarea[@id='Comm']
 
-${LOCATION_INFO_LINK}    //a[starts-with(@href, 'LocationInfo/')]
+${LOCATION_INFO_LINK_BY_HREF}    //a[starts-with(@href, 'LocationInfo/')]
+#${LOCATION_INFO_LINK_BY_STR}    //a[contains(.,"${STREET_NAME})]
 
 ${SEARCHBAR}    //input[@id='Grid_ToolbarSearchBox']
 ${START_SEARCH}    //span[@title='Search']
+${EDIT_BUTTON}    //span[.='Edit']
+${CH_BOX_SERVICE}    //span[@class='e-icons e-frame']
+${CH_BOX_SERVICE_AFTER_SAVING}    //td[@aria-label='True Column Header Szervíz']
 
 ${TABLE_LOCATOR}    //table/tbody
 
@@ -125,7 +130,7 @@ Verify Element Contains Text
     Element Should Contain    ${locator}    ${expected_text}
 
 Handling Serial Number NoneType Data
-    #Run Keyword If    "${serial_number}" == 'None'    Set Variable    ${serial_number}
+    Run Keyword If    "${serial_number}" == 'None'    Set Variable    ${serial_number}
     Run Keyword If    "${serial_number}" == None    Set Variable    ${serial_number}
     ${serial_number}=    Set Variable If    '${serial_number}' == 'None'    ${EMPTY}    ${serial_number}
 
@@ -324,7 +329,7 @@ Location Query With Searchbar Tool
 
 Get Location Info
     Sleep    2s
-    Click Element Safely    ${LOCATION_INFO_LINK}
+    Click Element Safely    ${LOCATION_INFO_LINK_BY_HREF}
     Wait Until Element Is Visible    ${LOC_INFO_H}
     Verify Element Contains Text    //td[text()="${PARTNER_NAME}"]    ${PARTNER_NAME}
 
@@ -335,4 +340,32 @@ Verify Excel Matches Web Table
     ${web_data}=    Read Table Data From Web    ${TABLE_LOCATOR}
     Set Suite Variable    ${web_data}
     Should Be Equal As Strings    ${excel_data}    ${web_data}
+
+Search Created Tool
+    Click Element Safely    ${SEARCHBAR}
+    Wait Until Element Is Visible    ${SEARCHBAR}
+    Input Text    ${SEARCHBAR}    ${TOOL_NAME}
+    Click Element Safely    ${START_SEARCH}
+    Verify Element Contains Text    //td[@class='e-rowcell ' and contains(text(), '${TOOL_NAME}')]    ${TOOL_NAME}
+    Click Element Safely    //td[@class='e-rowcell ' and contains(text(), '${TOOL_NAME}')]
+
+Open Tool Profile Editor
+    Click Element Safely    ${EDIT_BUTTON}
+    Verify Element Contains Text    ${TOOL_INFO_H}    Eszköz
+
+Activate Service Mode
+    Click Element Safely    ${CH_BOX_SERVICE}
+    Click Element Safely    ${SAVE_BUTTON}
+    Wait Until Page Contains Element    ${CH_BOX_SERVICE_AFTER_SAVING}
+    Element Should Be Visible   ${CH_BOX_SERVICE_AFTER_SAVING}
+    Sleep    5s
+
+Scroll To The Last Added Partner
+    Click Element Safely    //td[contains(text(), "${PARTNER_NAME}")]
+
+Click On The Street URL
+    ${LOCATION_INFO_LINK_BY_STR}    Set Variable    //div/div/a[@class='nav-link' and contains(., concat('${STREET_NAME}', ''))]
+    Click Element Safely    ${LOCATION_INFO_LINK_BY_STR}
+    Wait Until Element Is Visible    ${LOC_INFO_H}
+    Verify Element Contains Text    ${LOC_INFO_H}    Telephely adatok
     
