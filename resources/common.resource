@@ -1,9 +1,10 @@
 *** Settings ***
-Library    SeleniumLibrary
+Library    Selenium2Library
 Library    RequestsLibrary
 Library    Collections
 Library    OperatingSystem
 Library    excel_kws.py
+
 
 
 *** Variables ***
@@ -61,7 +62,7 @@ ${LOCATION_INFO_LINK}    //a[starts-with(@href, 'LocationInfo/')]
 ${SEARCHBAR}    //input[@id='Grid_ToolbarSearchBox']
 ${START_SEARCH}    //span[@title='Search']
 
-${TABLE_LOCATOR}    //div[@id='Grid']
+${TABLE_LOCATOR}    //table/tbody
 
 #Other Variables
 ${BROWSER}    Chrome
@@ -124,8 +125,10 @@ Verify Element Contains Text
     Element Should Contain    ${locator}    ${expected_text}
 
 Handling Serial Number NoneType Data
-    Run Keyword If    "${serial_number}" == 'None'    Set Variable    ${serial_number}
+    #Run Keyword If    "${serial_number}" == 'None'    Set Variable    ${serial_number}
     Run Keyword If    "${serial_number}" == None    Set Variable    ${serial_number}
+    ${serial_number}=    Set Variable If    '${serial_number}' == 'None'    ${EMPTY}    ${serial_number}
+
 
 Extract Device Data
     [Arguments]    ${device_data}
@@ -158,17 +161,22 @@ New File Should Appear
 Get Latest Downloaded File
     [Arguments]    ${DL_PATH}
     @{files}=    List Files In Directory    ${DL_PATH}    pattern=Export*.xlsx
-    @{file_names}=    Evaluate    [os.path.basename(f) for f in $files]    modules=os
-    @{sorted_files}=    Evaluate    sorted(@{file_names}, key=lambda x: os.path.getmtime(os.path.join(r'${DL_PATH}', x)), reverse=True)    modules=os
+    #@{file_names}=    Evaluate    [os.path.basename(f) for f in $files]    modules=os
+    @{sorted_files}=    Evaluate    sorted(@{files}, key=lambda x: os.path.getmtime(os.path.join(r'${DL_PATH}', x)), reverse=True)    modules=os
     ${latest_file}=    Get From List    ${sorted_files}    0
     RETURN    ${DL_PATH}${/}${latest_file}
 
 Read Table Data From Web
     [Arguments]    ${TABLE_LOCATOR}
-    ${table_rows}=    Get WebElements    ${TABLE_LOCATOR}
+    Wait Until Page Contains Element    ${TABLE_LOCATOR}
+    Wait Until Element Is Visible    ${TABLE_LOCATOR}/tr
+    Sleep    3s
+
+    ${table_rows}=    Get WebElements   ${TABLE_LOCATOR}/tr
+
     ${web_data}=    Create List
-    FOR    ${row}    IN    @{table_rows}
-        ${columns}=    Get WebElements    ${row}
+    FOR    ${row}    IN   @{table_rows}
+        ${columns}=    Get WebElements    ${row}/td
         ${row_data}=    Create List
         FOR    ${column}    IN    @{columns}
             ${cell_text}=    Get Text    ${column}
@@ -177,12 +185,6 @@ Read Table Data From Web
         Append To List    ${web_data}    ${row_data}
     END
     RETURN    ${web_data}
-
-Compare Data
-    [Arguments]    ${excel_data}    ${web_data}
-    ${excel_data_str}=    Convert To String    ${excel_data}
-    ${web_data_str}=    Convert To String    ${web_data}
-    Should Be Equal    ${excel_data_str}    ${web_data_str}
 
 #KWs in the Test Case
 Test Homepage Loaded    
@@ -228,6 +230,7 @@ Create Partner Profile With API Data
 
 Verify Partner Profile Created
     Click Element Safely    ${SAVE_BUTTON}
+    Sleep    2s
     Wait Until Page Contains Element    //td[contains(text(), "${PARTNER_NAME}")]    20s
     Verify Element Contains Text    //td[contains(text(), "${PARTNER_NAME}")]    ${PARTNER_NAME}
     Verify Element Contains Text    //td[contains(text(), "${PARTNER_EMAIL}")]    ${PARTNER_EMAIL}
@@ -331,5 +334,5 @@ Verify Excel Matches Web Table
     Set Suite Variable    ${excel_data}
     ${web_data}=    Read Table Data From Web    ${TABLE_LOCATOR}
     Set Suite Variable    ${web_data}
-    Compare Data    ${excel_data}    ${web_data}
+    Should Be Equal As Strings    ${excel_data}    ${web_data}
     
