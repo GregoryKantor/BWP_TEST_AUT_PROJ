@@ -4,6 +4,7 @@ Library    RequestsLibrary
 Library    Collections
 Library    OperatingSystem
 Library    excel_kws.py
+Library    String
 
 
 
@@ -59,7 +60,6 @@ ${ADD_TOOL_DESC_INPUT_FIELD}    //textarea[@id='Desc']
 ${ADD_TOOL_COMM_INPUT_FIELD}    //textarea[@id='Comm']
 
 ${LOCATION_INFO_LINK_BY_HREF}    //a[starts-with(@href, 'LocationInfo/')]
-#${LOCATION_INFO_LINK_BY_STR}    //a[contains(.,"${STREET_NAME})]
 
 ${SEARCHBAR}    //input[@id='Grid_ToolbarSearchBox']
 ${START_SEARCH}    //span[@title='Search']
@@ -177,15 +177,18 @@ Read Table Data From Web
     Wait Until Element Is Visible    ${TABLE_LOCATOR}/tr
     Sleep    3s
 
-    ${table_rows}=    Get WebElements   ${TABLE_LOCATOR}/tr
-
-    ${web_data}=    Create List
-    FOR    ${row}    IN   @{table_rows}
-        ${columns}=    Get WebElements    ${row}/td
+    ${table_rows}=    Get Element Count   ${TABLE_LOCATOR}/tr
+    
+    ${web_data}    Create List
+    FOR    ${row_num}    IN RANGE   1    ${table_rows+1}
+        @{cells}=    Get WebElements    ${TABLE_LOCATOR}/tr[${row_num}]
         ${row_data}=    Create List
-        FOR    ${column}    IN    @{columns}
-            ${cell_text}=    Get Text    ${column}
-            Append To List    ${row_data}    ${cell_text}
+        FOR    ${cell}    IN    @{cells}
+            Wait Until Element Is Visible    ${cell}
+            ${text}=    Get Text    ${cell}
+            ${clean_text}=    Replace String Using Regexp    ${text}    \\r?\\n    ${SPACE}
+            ${short_text}=    Get Substring    ${clean_text}    0    10
+            Append To List    ${row_data}    ${short_text}
         END
         Append To List    ${web_data}    ${row_data}
     END
@@ -339,6 +342,7 @@ Verify Excel Matches Web Table
     Set Suite Variable    ${excel_data}
     ${web_data}=    Read Table Data From Web    ${TABLE_LOCATOR}
     Set Suite Variable    ${web_data}
+
     Should Be Equal As Strings    ${excel_data}    ${web_data}
 
 Search Created Tool
@@ -358,7 +362,6 @@ Activate Service Mode
     Click Element Safely    ${SAVE_BUTTON}
     Wait Until Page Contains Element    ${CH_BOX_SERVICE_AFTER_SAVING}
     Element Should Be Visible   ${CH_BOX_SERVICE_AFTER_SAVING}
-    Sleep    5s
 
 Scroll To The Last Added Partner
     Click Element Safely    //td[contains(text(), "${PARTNER_NAME}")]
@@ -368,4 +371,3 @@ Click On The Street URL
     Click Element Safely    ${LOCATION_INFO_LINK_BY_STR}
     Wait Until Element Is Visible    ${LOC_INFO_H}
     Verify Element Contains Text    ${LOC_INFO_H}    Telephely adatok
-    

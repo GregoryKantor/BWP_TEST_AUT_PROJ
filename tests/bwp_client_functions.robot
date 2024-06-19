@@ -43,7 +43,7 @@ BWP Client Function Test
 
     Navigate To Tool Menu Element
 
-    #Verify Excel Matches Web Table
+    Verify Excel Matches Web Table
 
     Navigate To Tool Menu Element
 
