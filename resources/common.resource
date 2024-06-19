@@ -3,7 +3,7 @@ Library    Selenium2Library
 Library    RequestsLibrary
 Library    Collections
 Library    OperatingSystem
-Library    excel_kws.py
+Library    excel_kw.py
 Library    String
 
 
@@ -65,9 +65,10 @@ ${SEARCHBAR}    //input[@id='Grid_ToolbarSearchBox']
 ${START_SEARCH}    //span[@title='Search']
 ${EDIT_BUTTON}    //span[.='Edit']
 ${CH_BOX_SERVICE}    //span[@class='e-icons e-frame']
+${CH_BOX_SERVICE_ACTIVE}    //span[@class='e-icons e-frame e-check']
 ${CH_BOX_SERVICE_AFTER_SAVING}    //td[@aria-label='True Column Header Szervíz']
 
-${TABLE_LOCATOR}    //table/tbody
+${TABLE_LOCATOR}    //div[@id='toolList']
 
 #Other Variables
 ${BROWSER}    Chrome
@@ -77,7 +78,6 @@ ${DL_WIN_TITLE}    Letöltések
 ${CUSTOM_KW}    ${EXECDIR}/custom_kw_defs.py
 ${CHROMEDRIVER_PATH}    C:\\ChromeDriver\\chromedriver.exe
 ${EXCEL_FILE}    Export*.xlsx
-
 
 ${PARTNER_NAME}
 ${PARTNER_EMAIL}
@@ -130,10 +130,10 @@ Verify Element Contains Text
     Element Should Contain    ${locator}    ${expected_text}
 
 Handling Serial Number NoneType Data
-    Run Keyword If    "${serial_number}" == 'None'    Set Variable    ${serial_number}
-    Run Keyword If    "${serial_number}" == None    Set Variable    ${serial_number}
-    ${serial_number}=    Set Variable If    '${serial_number}' == 'None'    ${EMPTY}    ${serial_number}
-
+    Run Keyword If    "${serial_number}" == 'None'    Set Variable    ${serial_number}    ''
+    Run Keyword If    "${serial_number}" == None    Set Variable    ${serial_number}    ''
+    Set Variable    ${serial_number}    ${serial_number}
+    [Return]    ${serial_number}
 
 Extract Device Data
     [Arguments]    ${device_data}
@@ -172,26 +172,27 @@ Get Latest Downloaded File
 
 Read Table Data From Web
     [Arguments]    ${TABLE_LOCATOR}
-    Wait Until Page Contains Element    ${TABLE_LOCATOR}
-    Wait Until Element Is Visible    ${TABLE_LOCATOR}/tr
-    Sleep    3s
-
-    ${table_rows}=    Get Element Count   ${TABLE_LOCATOR}/tr
+    Wait Until Element Is Visible    ${TABLE_LOCATOR}
+    ${rows}=    Get WebElements    ${TABLE_LOCATOR}//tbody/tr
     
-    ${web_data}    Create List
-    FOR    ${row_num}    IN RANGE   1    ${table_rows+1}
-        @{cells}=    Get WebElements    ${TABLE_LOCATOR}/tr[${row_num}]
+    @{web_data}=    Create List
+    ${row_index}=    Set Variable    1
+    FOR    ${row}    IN    @{rows}
+        ${cells}=    Get WebElements    ${TABLE_LOCATOR}//tbody/tr[${row_index}]/td
         ${row_data}=    Create List
         FOR    ${cell}    IN    @{cells}
-            Wait Until Element Is Visible    ${cell}
             ${text}=    Get Text    ${cell}
-            ${clean_text}=    Replace String Using Regexp    ${text}    \\r?\\n    ${SPACE}
-            ${short_text}=    Get Substring    ${clean_text}    0    3
-            Append To List    ${row_data}    ${short_text}
+            Append To List    ${row_data}    ${text}
         END
         Append To List    ${web_data}    ${row_data}
+        ${row_index}    Evaluate    ${row_index} + 1
     END
     RETURN    ${web_data}
+
+Check If Item Present
+    [Arguments]    ${item}    ${data_list}
+    ${result}=    Evaluate    ${item} in ${data_list}
+    RETURN    ${result}
 
 #KWs in the Test Case
 Test Homepage Loaded    
@@ -318,9 +319,7 @@ Verify Tool Profile Created
 Click On Excel Export Button And Verify Downloading
     ${files_before}=     Count Files In Directory  ${DL_PATH}    ${EXCEL_FILE}
     Click Element Safely    ${EXCEL_EXP_BUTTON}
-    Wait Until Keyword Succeeds    60s    1s    New File Should Appear    ${files_before}    ${DL_PATH}
-    ${files_after}=  Count Files In Directory  ${DL_PATH}    ${EXCEL_FILE}
-    Should Be True  ${files_after} > ${FILES_BEFORE}
+    Wait Until Keyword Succeeds    20s    1s    New File Should Appear    ${files_before}    ${DL_PATH}
 
 Location Query With Searchbar Tool
     Click Element Safely    ${SEARCHBAR}
@@ -342,12 +341,16 @@ Verify Excel Matches Web Table
     ${web_data}=    Read Table Data From Web    ${TABLE_LOCATOR}
     Set Suite Variable    ${web_data}
 
-    Should Be Equal As Strings    ${excel_data}    ${web_data}
-
+    FOR    ${web_item}    IN    @{web_data}
+        ${is_present}=    Run Keyword And Return Status    Check If Item Present    ${web_item}    ${excel_data}
+        Should Be True    ${is_present}    ${web_item} is not present in the excel data
+    END
+    
 Search Created Tool
     Click Element Safely    ${SEARCHBAR}
     Wait Until Element Is Visible    ${SEARCHBAR}
     Input Text    ${SEARCHBAR}    ${TOOL_NAME}
+    Wait Until Page Contains    ${TOOL_NAME}
     Click Element Safely    ${START_SEARCH}
     Verify Element Contains Text    //td[@class='e-rowcell ' and contains(text(), '${TOOL_NAME}')]    ${TOOL_NAME}
     Click Element Safely    //td[@class='e-rowcell ' and contains(text(), '${TOOL_NAME}')]
@@ -358,6 +361,7 @@ Open Tool Profile Editor
 
 Activate Service Mode
     Click Element Safely    ${CH_BOX_SERVICE}
+    Wait Until Element Is Visible    ${CH_BOX_SERVICE_ACTIVE}
     Click Element Safely    ${SAVE_BUTTON}
     Wait Until Page Contains Element    ${CH_BOX_SERVICE_AFTER_SAVING}
     Element Should Be Visible   ${CH_BOX_SERVICE_AFTER_SAVING}

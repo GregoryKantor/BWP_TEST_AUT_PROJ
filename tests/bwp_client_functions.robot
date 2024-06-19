@@ -41,8 +41,6 @@ BWP Client Function Test
 
     Get Location Info
 
-    Navigate To Tool Menu Element
-
     Verify Excel Matches Web Table
 
     Navigate To Tool Menu Element
