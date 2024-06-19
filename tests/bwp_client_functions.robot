@@ -57,4 +57,6 @@ BWP Client Function Test
 
     Scroll To The Last Added Partner
 
-    Click On The Street URL
+    Click On The Street URL And Verify Tool Info Page Loaded
+
+    Verify Tool In Active Service Mode Removed From Partner Tool List On Location Info Page

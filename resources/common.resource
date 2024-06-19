@@ -166,7 +166,6 @@ New File Should Appear
 Get Latest Downloaded File
     [Arguments]    ${DL_PATH}
     @{files}=    List Files In Directory    ${DL_PATH}    pattern=Export*.xlsx
-    #@{file_names}=    Evaluate    [os.path.basename(f) for f in $files]    modules=os
     @{sorted_files}=    Evaluate    sorted(@{files}, key=lambda x: os.path.getmtime(os.path.join(r'${DL_PATH}', x)), reverse=True)    modules=os
     ${latest_file}=    Get From List    ${sorted_files}    0
     RETURN    ${DL_PATH}${/}${latest_file}
@@ -187,7 +186,7 @@ Read Table Data From Web
             Wait Until Element Is Visible    ${cell}
             ${text}=    Get Text    ${cell}
             ${clean_text}=    Replace String Using Regexp    ${text}    \\r?\\n    ${SPACE}
-            ${short_text}=    Get Substring    ${clean_text}    0    10
+            ${short_text}=    Get Substring    ${clean_text}    0    3
             Append To List    ${row_data}    ${short_text}
         END
         Append To List    ${web_data}    ${row_data}
@@ -366,8 +365,11 @@ Activate Service Mode
 Scroll To The Last Added Partner
     Click Element Safely    //td[contains(text(), "${PARTNER_NAME}")]
 
-Click On The Street URL
+Click On The Street URL And Verify Tool Info Page Loaded
     ${LOCATION_INFO_LINK_BY_STR}    Set Variable    //div/div/a[@class='nav-link' and contains(., concat('${STREET_NAME}', ''))]
     Click Element Safely    ${LOCATION_INFO_LINK_BY_STR}
     Wait Until Element Is Visible    ${LOC_INFO_H}
     Verify Element Contains Text    ${LOC_INFO_H}    Telephely adatok
+
+Verify Tool In Active Service Mode Removed From Partner Tool List On Location Info Page
+    Page Should Not Contain    ${TOOL_NAME}
