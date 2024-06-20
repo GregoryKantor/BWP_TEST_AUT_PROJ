@@ -203,6 +203,7 @@ Get Random Data From API (NO PROXY)
         Exit For Loop If    ${zip_code_starts_with_zero} == False
         ${api_response}=    GET    ${API_URL}
         ${api_data_body}=    Set Variable    ${api_response.json()}
+        Sleep    5s
     END
 
     ${zip_code}    Evaluate    ''.join(c for c in "${api_data_body}[address][zip_code]" if c.isdigit())
@@ -229,7 +230,7 @@ Create Partner Profile With API Data
 
 Verify Partner Profile Created
     Click Element Safely    ${SAVE_BUTTON}
-    Sleep    2s
+    Sleep    3s
     Wait Until Page Contains Element    //td[contains(text(), "${PARTNER_NAME}")]    20s
     Verify Element Contains Text    //td[contains(text(), "${PARTNER_NAME}")]    ${PARTNER_NAME}
     Verify Element Contains Text    //td[contains(text(), "${PARTNER_EMAIL}")]    ${PARTNER_EMAIL}
@@ -298,6 +299,7 @@ Create Tool Profile With API Device Data
     Sleep    1s
     Input Text    ${ADD_TOOL_COMM_INPUT_FIELD}    ${serial_number}
     Sleep    1s
+
     Click Element Safely    ${SAVE_BUTTON}
 
 Verify Tool Profile Created
@@ -309,6 +311,7 @@ Verify Tool Profile Created
 
 Click On Excel Export Button And Verify Downloading
     ${files_before}=     Count Files In Directory  ${DL_PATH}    ${EXCEL_FILE}
+    Sleep    3s
     Click Element Safely    ${EXCEL_EXP_BUTTON}
     Wait Until Keyword Succeeds    20s    1s    New File Should Appear    ${files_before}    ${DL_PATH}
 
@@ -352,19 +355,24 @@ Open Tool Profile Editor
 
 Activate Service Mode
     Click Element Safely    ${CH_BOX_SERVICE}
+    Sleep    1s
     Wait Until Element Is Visible    ${CH_BOX_SERVICE_ACTIVE}
+    Sleep    1s
     Click Element Safely    ${SAVE_BUTTON}
+    Sleep    3s
     Wait Until Page Contains Element    ${CH_BOX_SERVICE_AFTER_SAVING}
     Element Should Be Visible   ${CH_BOX_SERVICE_AFTER_SAVING}
 
 Scroll To The Last Added Partner
     Click Element Safely    //td[contains(text(), "${PARTNER_NAME}")]
+    Sleep    5s
 
 Click On The Street URL And Verify Tool Info Page Loaded
     ${LOCATION_INFO_LINK_BY_STR}    Set Variable    //div/div/a[@class='nav-link' and contains(., concat('${STREET_NAME}', ''))]
     Click Element Safely    ${LOCATION_INFO_LINK_BY_STR}
     Wait Until Element Is Visible    ${LOC_INFO_H}
     Verify Element Contains Text    ${LOC_INFO_H}    Telephely adatok
+    Sleep    3s
 
 Verify Tool In Active Service Mode Removed From Partner Tool List On Location Info Page
     Page Should Not Contain    ${TOOL_NAME}
