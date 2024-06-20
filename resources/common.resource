@@ -1,10 +1,9 @@
 *** Settings ***
-Library    Selenium2Library
+Library    SeleniumLibrary
 Library    RequestsLibrary
 Library    Collections
 Library    OperatingSystem
 Library    excel_kw.py
-Library    String
 
 
 
@@ -20,8 +19,7 @@ ${REPORT_URL}    https://bwpool.azurewebsites.net/Report
 ${PROXY}  http://idebproxy01.itsh.itsh-internal.hu:3128
 ${API_URL}  https://random-data-api.com/api/users/random_user
 ${API_DEVICE_URL}    https://random-data-api.com/api/device/random_device?size=2
-${CUSTOMER_URL}    https://bwpool.azurewebsites.net/Customer
-${LOCATION_URL}    https://bwpool.azurewebsites.net/Location
+
 
 # Locators
 ${HOME}    //a[.='BWP nyilvántartó']
@@ -40,7 +38,6 @@ ${TOOL_INFO_H}    //h4[.='Eszköz']
 
 ${EXCEL_EXP_BUTTON}    //button[@aria-label="Excel Export"]
 ${ADD_BUTTON}      css=button[aria-label="Add"]
-${ADD_BUTTON_XPATH}  //button[@aria-label="Add"]
 ${SAVE_BUTTON}    //button[@class='e-control e-btn e-lib e-control e-btn e-lib e-primary e-flat']
 
 ${ADD_CUS_NAME_INPUT_FIELD}    //div/input[@id="name"]
@@ -74,7 +71,6 @@ ${TABLE_LOCATOR}    //div[@id='toolList']
 ${BROWSER}    Chrome
 ${EXPECTED_TITLE}    BWP Index
 ${DL_PATH}    C:\\Users\\H200323673\\Downloads
-${DL_WIN_TITLE}    Letöltések
 ${CUSTOM_KW}    ${EXECDIR}/custom_kw_defs.py
 ${CHROMEDRIVER_PATH}    C:\\ChromeDriver\\chromedriver.exe
 ${EXCEL_FILE}    Export*.xlsx
@@ -103,14 +99,12 @@ Test Setup
 Test Teardown
     Close All Browsers
 
-#Built Dynamic KWs
+# Utility KWs
 Navigate And Verify Page
     [Arguments]    ${menu_element}    ${url}    ${page_header}    ${timeout}=20s
     Click Element Safely    ${menu_element}
     Location Should Be    ${url}
     Wait Until Element Is Visible    ${page_header}    ${timeout}
-    Element Should Be Visible    ${page_header}
-    RETURN    ${True}
 
 Click Element Safely
     [Arguments]    ${locator}    ${retries}=5
@@ -130,27 +124,24 @@ Verify Element Contains Text
     Element Should Contain    ${locator}    ${expected_text}
 
 Handling Serial Number NoneType Data
-    Run Keyword If    "${serial_number}" == 'None'    Set Variable    ${serial_number}    ''
-    Run Keyword If    "${serial_number}" == None    Set Variable    ${serial_number}    ''
-    Set Variable    ${serial_number}    ${serial_number}
+    [Arguments]    ${serial_number}
+    ${serial_number}=    Set Variable If    "${serial_number}" == "None"    ''    ${serial_number}
     [Return]    ${serial_number}
 
+# Dynamic KWs
 Extract Device Data
     [Arguments]    ${device_data}
     ${manufacturer}=    Get From Dictionary    ${device_data}    manufacturer
     ${model}=    Get From Dictionary    ${device_data}    model
     ${platform}=    Get From Dictionary    ${device_data}    platform
     ${serial_number}=    Get From Dictionary    ${device_data}    serial_number
-
-    Handling Serial Number NoneType Data
+    ${serial_number}=    Handling Serial Number NoneType Data    ${serial_number}
 
     RETURN    ${manufacturer}    ${model}    ${platform}    ${serial_number}
 
 Set Device Variables
     [Arguments]    ${index}    ${device_data}
     ${manufacturer}    ${model}    ${platform}    ${serial_number}=    Extract Device Data    ${device_data}
-
-    Handling Serial Number NoneType Data
 
     Set Suite Variable    ${API_DATA_DEVICE_${index}}    ${device_data}
     Set Suite Variable    ${MANUFACTURER_DEVICE_${index}}    ${manufacturer}
@@ -285,8 +276,8 @@ Create Tool Profile With API Device Data
     ${model}=    Get Variable Value    ${MODEL_DEVICE_${index}}
     ${platform}=    Get Variable Value    ${PLATFORM_DEVICE_${index}}
     ${serial_number}=    Get Variable Value    ${SERIAL_NUMBER_DEVICE_${index}}
-
-    Handling Serial Number NoneType Data
+    ${serial_number}=    Get Variable Value    ${SERIAL_NUMBER_DEVICE_${index}}
+    ${serial_number}=    Handling Serial Number NoneType Data    ${serial_number}
 
     ${TOOL_NAME}=    Catenate    ${manufacturer} ${model}
     ${TOOL_LOCATION}=    Catenate    ${zip_code} ${city}, ${street_name}
@@ -345,8 +336,8 @@ Verify Excel Matches Web Table
         ${is_present}=    Run Keyword And Return Status    Check If Item Present    ${web_item}    ${excel_data}
         Should Be True    ${is_present}    ${web_item} is not present in the excel data
     END
-    
-Search Created Tool
+
+Search Last Created Tool
     Click Element Safely    ${SEARCHBAR}
     Wait Until Element Is Visible    ${SEARCHBAR}
     Input Text    ${SEARCHBAR}    ${TOOL_NAME}

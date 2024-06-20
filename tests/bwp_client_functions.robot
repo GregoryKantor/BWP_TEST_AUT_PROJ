@@ -45,7 +45,7 @@ BWP Client Function Test
 
     Navigate To Tool Menu Element
 
-    Search Created Tool
+    Search Last Created Tool
 
     Open Tool Profile Editor
 
