@@ -71,7 +71,6 @@ ${TABLE_LOCATOR}    //div[@id='toolList']
 ${BROWSER}    Chrome
 ${EXPECTED_TITLE}    BWP Index
 ${DL_PATH}    C:\\Users\\H200323673\\Downloads
-${CUSTOM_KW}    ${EXECDIR}/custom_kw_defs.py
 ${CHROMEDRIVER_PATH}    C:\\ChromeDriver\\chromedriver.exe
 ${EXCEL_FILE}    Export*.xlsx
 
