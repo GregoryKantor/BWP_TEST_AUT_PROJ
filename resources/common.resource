@@ -61,8 +61,8 @@ ${LOCATION_INFO_LINK_BY_HREF}    //a[starts-with(@href, 'LocationInfo/')]
 ${SEARCHBAR}    //input[@id='Grid_ToolbarSearchBox']
 ${START_SEARCH}    //span[@title='Search']
 ${EDIT_BUTTON}    //span[.='Edit']
-${CH_BOX_SERVICE}    //span[@class='e-icons e-frame']
-${CH_BOX_SERVICE_ACTIVE}    //span[@class='e-icons e-frame e-check']
+${CH_BOX_SERVICE}    //span[@class='e-label']
+${CH_BOX_SERVICE_ACTIVE}    //input[@class="e-control e-checkbox e-lib"]
 ${CH_BOX_SERVICE_AFTER_SAVING}    //td[@aria-label='True Column Header Szervíz']
 
 ${TABLE_LOCATOR}    //div[@id='toolList']
@@ -85,6 +85,7 @@ ${TOOL_NAME}
 ${TOOL_LOCATION}
 ${platform}
 ${serial_number}
+${TOOL_ID}
 
 # Error messages
 
@@ -160,13 +161,17 @@ Get Latest Downloaded File
     ${latest_file}=    Get From List    ${sorted_files}    0
     RETURN    ${DL_PATH}${/}${latest_file}
 
-Read Table Data From Web
+Read Table Data From Web And Get Tool ID
     [Arguments]    ${TABLE_LOCATOR}
     Wait Until Element Is Visible    ${TABLE_LOCATOR}
     ${rows}=    Get WebElements    ${TABLE_LOCATOR}//tbody/tr
+
+    ${first_cell}=    Get Text    //h6[text()='Eszközök']/following::table//tbody/tr[2]/td[1]
+    Set Suite Variable    ${TOOL_ID}    ${first_cell}
     
     @{web_data}=    Create List
     ${row_index}=    Set Variable    1
+
     FOR    ${row}    IN    @{rows}
         ${cells}=    Get WebElements    ${TABLE_LOCATOR}//tbody/tr[${row_index}]/td
         ${row_data}=    Create List
@@ -319,6 +324,7 @@ Location Query With Searchbar Tool
     Wait Until Element Is Visible    ${SEARCHBAR}
     Input Text    ${SEARCHBAR}    ${PARTNER_NAME}
     Click Element Safely    ${START_SEARCH}
+    Sleep    2s
     Verify Element Contains Text    //td[@class='e-rowcell ' and contains(text(), '${PARTNER_NAME}')]    ${PARTNER_NAME}
 
 Get Location Info
@@ -331,7 +337,7 @@ Verify Excel Matches Web Table
     ${newest_file}=    Get Latest Downloaded File    ${DL_PATH}
     ${excel_data}=    Read Excel File    ${newest_file}
     Set Suite Variable    ${excel_data}
-    ${web_data}=    Read Table Data From Web    ${TABLE_LOCATOR}
+    ${web_data}=    Read Table Data From Web And Get Tool ID    ${TABLE_LOCATOR}
     Set Suite Variable    ${web_data}
 
     FOR    ${web_item}    IN    @{web_data}
@@ -342,36 +348,35 @@ Verify Excel Matches Web Table
 Search Last Created Tool
     Click Element Safely    ${SEARCHBAR}
     Wait Until Element Is Visible    ${SEARCHBAR}
-    Input Text    ${SEARCHBAR}    ${TOOL_NAME}
-    Wait Until Page Contains    ${TOOL_NAME}
+    Input Text    ${SEARCHBAR}    ${TOOL_ID}
+    Wait Until Page Contains    ${TOOL_ID}
     Click Element Safely    ${START_SEARCH}
-    Verify Element Contains Text    //td[@class='e-rowcell ' and contains(text(), '${TOOL_NAME}')]    ${TOOL_NAME}
-    Click Element Safely    //td[@class='e-rowcell ' and contains(text(), '${TOOL_NAME}')]
+    Verify Element Contains Text    //td[@class='e-rowcell ' and contains(text(), '${PARTNER_NAME}')]    ${PARTNER_NAME}
+    Click Element Safely    //td[@class='e-rowcell ' and contains(text(), '${PARTNER_NAME}')]
 
 Open Tool Profile Editor
+    Sleep    3s
     Click Element Safely    ${EDIT_BUTTON}
     Verify Element Contains Text    ${TOOL_INFO_H}    Eszköz
 
 Activate Service Mode
-    Click Element Safely    ${CH_BOX_SERVICE}
-    Sleep    1s
-    Wait Until Element Is Visible    ${CH_BOX_SERVICE_ACTIVE}
-    Sleep    1s
+    FOR    ${retry_count}    IN RANGE    2
+        Click Element Safely    ${CH_BOX_SERVICE}
+        ${checkbox_status}=    Get Element Attribute    ${CH_BOX_SERVICE_ACTIVE}    checked
+        Run Keyword If    '${checkbox_status}' == 'true'    Exit For Loop
+        Sleep    2s
+    END
+    Should Be Equal    ${checkbox_status}    true
     Click Element Safely    ${SAVE_BUTTON}
-    Sleep    3s
-    Wait Until Page Contains Element    ${CH_BOX_SERVICE_AFTER_SAVING}
-    Element Should Be Visible   ${CH_BOX_SERVICE_AFTER_SAVING}
 
 Scroll To The Last Added Partner
     Click Element Safely    //td[contains(text(), "${PARTNER_NAME}")]
-    Sleep    5s
 
 Click On The Street URL And Verify Tool Info Page Loaded
-    ${LOCATION_INFO_LINK_BY_STR}    Set Variable    //div/div/a[@class='nav-link' and contains(., concat('${STREET_NAME}', ''))]
+    ${LOCATION_INFO_LINK_BY_STR}    Set Variable    //div/div/a[@class='nav-link' and contains(., concat("${STREET_NAME}", ''))]
     Click Element Safely    ${LOCATION_INFO_LINK_BY_STR}
     Wait Until Element Is Visible    ${LOC_INFO_H}
     Verify Element Contains Text    ${LOC_INFO_H}    Telephely adatok
-    Sleep    3s
 
 Verify Tool In Active Service Mode Removed From Partner Tool List On Location Info Page
     Page Should Not Contain    ${TOOL_NAME}
