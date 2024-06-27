@@ -268,6 +268,7 @@ Search Last Created Tool
     Input Text    ${SEARCHBAR}    ${TOOL_ID}
     Wait Until Page Contains    ${TOOL_ID}
     Click Element Safely    ${START_SEARCH}
+    Sleep    2s
     Verify Element Contains Text    //td[@class='e-rowcell ' and contains(text(), '${PARTNER_NAME}')]    ${PARTNER_NAME}
     Click Element Safely    //td[@class='e-rowcell ' and contains(text(), '${PARTNER_NAME}')]
 
